@@ -21,21 +21,33 @@
           <div id="empty-state" class="empty-state">
             <span class="empty-mark">@</span>
             <h2>选择要回答的 Agent</h2>
-            <p><code>@codex</code>、<code>@claude</code> 或 <code>@all</code>。不写 @ 时默认同时询问两个。</p>
+            <p>在输入框键入 <code>@</code>，从弹出的菜单选择一个或全部 Agent。不选择时默认同时询问两个。</p>
           </div>
         </div>
 
         <div class="composer">
-          <div class="mention-bar" aria-label="选择 Agent">
-            <button type="button" data-mention="@codex">@codex</button>
-            <button type="button" data-mention="@claude">@claude</button>
-            <button type="button" data-mention="@all">@all</button>
-            <span id="connection-status">本机直连</span>
+          <div id="mention-picker" class="mention-picker" role="listbox" aria-label="选择回答的 Agent" hidden>
+            <button type="button" role="option" data-agent-token="@codex" data-search="codex gpt chatgpt openai">
+              <span class="picker-avatar picker-codex">G</span>
+              <span><strong>Codex</strong><small>ChatGPT 订阅</small></span>
+              <kbd>@codex</kbd>
+            </button>
+            <button type="button" role="option" data-agent-token="@claude" data-search="claude anthropic">
+              <span class="picker-avatar picker-claude">C</span>
+              <span><strong>Claude Agent</strong><small>Claude 订阅</small></span>
+              <kbd>@claude</kbd>
+            </button>
+            <button type="button" role="option" data-agent-token="@all" data-search="all both everyone 全部">
+              <span class="picker-avatar picker-all">＋</span>
+              <span><strong>全部 Agent</strong><small>同时询问两个</small></span>
+              <kbd>@all</kbd>
+            </button>
           </div>
           <label class="sr-only" for="prompt">消息</label>
-          <textarea id="prompt" rows="3" maxlength="50000" placeholder="@codex 帮我分析……"></textarea>
+          <textarea id="prompt" rows="3" maxlength="50000" placeholder="输入消息，键入 @ 选择 Agent…" aria-autocomplete="list" aria-controls="mention-picker" aria-expanded="false"></textarea>
           <div class="composer-footer">
             <p id="form-error" class="form-error" role="alert" hidden></p>
+            <span id="connection-status">本机直连</span>
             <span class="privacy-note">最近 20 条作为共享上下文</span>
             <button id="send-message" type="button" aria-label="发送消息">发送</button>
           </div>

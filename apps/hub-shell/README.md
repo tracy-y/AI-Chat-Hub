@@ -1,6 +1,6 @@
 # Hub Shell
 
-零第三方依赖的 Chrome Manifest V3 侧边栏。默认通过 Native Messaging 连接 Mac 本地 Companion，在单一聊天时间线里用 `@codex`、`@claude` 或 `@all` 选择回答者并连续追问；网页手动转接是备用路径。
+零第三方依赖的 Chrome Manifest V3 侧边栏。默认通过 Native Messaging 连接 Mac 本地 Companion，在单一聊天时间线里键入 `@` 打开 Agent 选择菜单并连续追问；网页手动转接是备用路径。
 
 ## 加载
 

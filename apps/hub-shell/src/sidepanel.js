@@ -1,6 +1,7 @@
 import { createManualRelayAdapter } from "./adapters/manual-relay-adapter.js";
 import { createNativeAgentResponse } from "./adapters/native-agent-adapter.js";
 import { buildProviderPrompt } from "./core/conversation-context.js";
+import { applyMentionSelection, findMentionQuery } from "./core/mention-autocomplete.js";
 import { parseMentionRouting } from "./core/mention-routing.js";
 import { createUserMessage } from "./core/user-message.js";
 import { askNativeCompanion } from "./native-client.js";
@@ -24,7 +25,12 @@ const errorElement = document.querySelector("#form-error");
 const connectionStatus = document.querySelector("#connection-status");
 const userTemplate = document.querySelector("#user-message-template");
 const agentTemplate = document.querySelector("#agent-message-template");
+const mentionPicker = document.querySelector("#mention-picker");
+const pickerOptions = [...mentionPicker.querySelectorAll("[data-agent-token]")];
 let conversationRecords = await store.list();
+let activeMention = null;
+let visiblePickerOptions = [];
+let activePickerIndex = 0;
 
 function setError(message = "") {
   errorElement.textContent = message;
@@ -43,8 +49,8 @@ function createUserElement(record) {
   const fragment = userTemplate.content.cloneNode(true);
   const element = fragment.querySelector(".message");
   element.querySelector("time").textContent = formatTime(record.createdAt);
-  element.querySelector(".message-text").textContent = record.text;
-  element.querySelector(".message-targets").textContent = record.providers.map((id) => `@${id}`).join(" · ");
+  element.querySelector(".message-text").textContent = record.promptText ?? record.text;
+  element.querySelector(".message-targets").textContent = `发送给 ${record.providers.map((id) => id === "codex" ? "Codex" : "Claude").join("、")}`;
   return element;
 }
 
@@ -165,11 +171,51 @@ async function sendMessage() {
   }
 }
 
-function selectMention(mention) {
-  const cleaned = promptInput.value.replace(/(^|\s)@(codex|gpt|chatgpt|claude|all)\b/gi, "$1").trimStart();
-  promptInput.value = `${mention} ${cleaned}`;
+function hideMentionPicker() {
+  mentionPicker.hidden = true;
+  promptInput.setAttribute("aria-expanded", "false");
+  activeMention = null;
+  visiblePickerOptions = [];
+  for (const option of pickerOptions) option.setAttribute("aria-selected", "false");
+}
+
+function updatePickerSelection() {
+  for (const option of pickerOptions) option.setAttribute("aria-selected", "false");
+  for (const [index, option] of visiblePickerOptions.entries()) {
+    option.setAttribute("aria-selected", String(index === activePickerIndex));
+  }
+}
+
+function updateMentionPicker() {
+  activeMention = findMentionQuery(promptInput.value, promptInput.selectionStart);
+  if (!activeMention) {
+    hideMentionPicker();
+    return;
+  }
+
+  visiblePickerOptions = pickerOptions.filter((option) => {
+    const visible = option.dataset.search.includes(activeMention.query);
+    option.hidden = !visible;
+    return visible;
+  });
+  if (visiblePickerOptions.length === 0) {
+    hideMentionPicker();
+    return;
+  }
+
+  activePickerIndex = 0;
+  mentionPicker.hidden = false;
+  promptInput.setAttribute("aria-expanded", "true");
+  updatePickerSelection();
+}
+
+function chooseMention(option) {
+  if (!activeMention) return;
+  const selection = applyMentionSelection(promptInput.value, activeMention, option.dataset.agentToken);
+  promptInput.value = selection.text;
+  hideMentionPicker();
   promptInput.focus();
-  promptInput.setSelectionRange(promptInput.value.length, promptInput.value.length);
+  promptInput.setSelectionRange(selection.cursor, selection.cursor);
 }
 
 async function saveManualResponse(providerId) {
@@ -199,13 +245,39 @@ async function saveManualResponse(providerId) {
 for (const record of conversationRecords) renderRecord(record);
 sendButton.addEventListener("click", sendMessage);
 promptInput.addEventListener("keydown", (event) => {
+  if (!mentionPicker.hidden) {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      activePickerIndex = (activePickerIndex + direction + visiblePickerOptions.length) % visiblePickerOptions.length;
+      updatePickerSelection();
+      return;
+    }
+    if (event.key === "Enter" || event.key === "Tab") {
+      event.preventDefault();
+      chooseMention(visiblePickerOptions[activePickerIndex]);
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      hideMentionPicker();
+      return;
+    }
+  }
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     if (!sendButton.disabled) sendMessage();
   }
 });
-for (const button of document.querySelectorAll("[data-mention]")) {
-  button.addEventListener("click", () => selectMention(button.dataset.mention));
+promptInput.addEventListener("input", updateMentionPicker);
+promptInput.addEventListener("click", updateMentionPicker);
+promptInput.addEventListener("keyup", (event) => {
+  if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) updateMentionPicker();
+});
+promptInput.addEventListener("blur", () => setTimeout(hideMentionPicker, 0));
+for (const option of pickerOptions) {
+  option.addEventListener("mousedown", (event) => event.preventDefault());
+  option.addEventListener("click", () => chooseMention(option));
 }
 for (const button of document.querySelectorAll(".save-response")) {
   button.addEventListener("click", () => saveManualResponse(button.dataset.providerId));

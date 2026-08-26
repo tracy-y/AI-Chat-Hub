@@ -29,10 +29,10 @@ npm run install:native-host
 
 ## 聊天方式
 
-- `@codex 问题`：只调用 Codex。
-- `@claude 问题`：只调用 Claude Agent。
-- `@all 问题`：同时调用两个 Agent。
+- 在输入框键入 `@`，从弹出的菜单选择 Codex、Claude Agent 或全部 Agent。
+- 可继续输入字母过滤菜单，并使用上下方向键 + Enter/Tab 选择，Esc 关闭。
 - 不写 `@`：固定等同于 `@all`，不做智能路由。
+- 发送后的用户气泡只显示问题正文；目标显示为“发送给 Codex/Claude”。
 - Enter 发送，Shift + Enter 换行；“新对话”会清空当前本地聊天记录。
 
 ## 项目资料
