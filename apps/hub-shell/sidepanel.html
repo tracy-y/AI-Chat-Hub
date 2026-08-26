@@ -48,7 +48,12 @@
           <div class="composer-footer">
             <p id="form-error" class="form-error" role="alert" hidden></p>
             <span id="connection-status">本机直连</span>
-            <span class="privacy-note">最近 20 条作为共享上下文</span>
+            <label class="context-mode-label" for="context-mode">上下文</label>
+            <select id="context-mode" title="超长内容会按字符上限优先保留最新记录">
+              <option value="simple">简单 · 20 条</option>
+              <option value="standard">一般 · 50 条</option>
+              <option value="deep">深度 · 100 条</option>
+            </select>
             <button id="send-message" type="button" aria-label="发送消息">发送</button>
           </div>
         </div>

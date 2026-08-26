@@ -18,6 +18,7 @@ function createSession(records = []) {
     title: records.length ? deriveTitle(records) : "新对话",
     createdAt: records[0]?.createdAt ?? records[0]?.capturedAt ?? now,
     updatedAt: records.at(-1)?.createdAt ?? records.at(-1)?.capturedAt ?? now,
+    contextMode: "simple",
     records: structuredClone(records),
   };
 }
@@ -33,7 +34,11 @@ export function createChromeChatSessionStore(chromeApi = globalThis.chrome) {
   async function readOrInitialize() {
     const result = await chromeApi.storage.local.get([SESSION_STORAGE_KEY, LEGACY_RECORDS_KEY]);
     const saved = result[SESSION_STORAGE_KEY];
-    if (saved?.sessions?.length && saved.activeSessionId) return saved;
+    if (saved?.sessions?.length && saved.activeSessionId) {
+      const normalized = cloneState(saved);
+      for (const session of normalized.sessions) session.contextMode ??= "simple";
+      return normalized;
+    }
 
     const legacyRecords = Array.isArray(result[LEGACY_RECORDS_KEY]) ? result[LEGACY_RECORDS_KEY] : [];
     const session = createSession(legacyRecords);
@@ -110,6 +115,18 @@ export function createChromeChatSessionStore(chromeApi = globalThis.chrome) {
           const replacement = [...state.sessions].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
           state.activeSessionId = replacement.id;
         }
+        return state;
+      });
+    },
+
+    async setContextMode(mode) {
+      if (!["simple", "standard", "deep"].includes(mode)) {
+        throw new TypeError("Unknown context mode");
+      }
+      return enqueue((state) => {
+        const session = state.sessions.find((candidate) => candidate.id === state.activeSessionId);
+        if (!session) throw new Error("Active chat session is missing");
+        session.contextMode = mode;
         return state;
       });
     },

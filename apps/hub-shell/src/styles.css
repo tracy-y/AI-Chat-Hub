@@ -97,7 +97,9 @@ button { cursor: pointer; }
 #prompt { width: 100%; resize: none; border: 0; border-radius: 12px; padding: 11px 12px; background: #fff; color: #18211d; line-height: 1.5; box-shadow: inset 0 0 0 1px #cfd6d2; }
 #prompt:focus-visible { outline: 3px solid rgb(40 108 84 / 20%); box-shadow: none; }
 .composer-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: 34px; margin-top: 7px; }
-.privacy-note { flex: 1 1 auto; color: #829089; font-size: 9px; text-align: right; }
+.context-mode-label { margin-left: auto; color: #829089; font-size: 9px; }
+#context-mode { max-width: 112px; border: 1px solid #cbd4cf; border-radius: 8px; padding: 6px 7px; background: #fff; color: #3d554b; font-size: 9px; font-weight: 700; }
+#context-mode:disabled { cursor: wait; opacity: 0.55; }
 #send-message { flex: 0 0 auto; border: 0; border-radius: 10px; padding: 8px 13px; background: #1f5c48; color: #fff; font-size: 11px; font-weight: 800; }
 #send-message:disabled { cursor: wait; opacity: 0.55; }
 .form-error { flex: 1; margin: 0; color: #a23b31; font-size: 10px; }
@@ -140,7 +142,7 @@ button { cursor: pointer; }
   :root, body { background: #121815; color: #edf3ef; }
   .chat-shell, .manual-fallback, .conversation-history { border-color: rgb(255 255 255 / 12%); background: #19211d; }
   .empty-state h2 { color: #eef4f0; }
-  .text-button, .message-body, #prompt, .response-input, .source-input { border-color: #46544d; background: #202b26; color: #edf3ef; }
+  .text-button, .message-body, #prompt, #context-mode, .response-input, .source-input { border-color: #46544d; background: #202b26; color: #edf3ef; }
   .composer { border-color: #36433d; background: #17201c; }
   .agent-avatar { background: #293d35; color: #9dd5bf; }
   .mention-picker { border-color: #46544d; background: #202b26; }

@@ -23,6 +23,7 @@ const sendButton = document.querySelector("#send-message");
 const newChatButton = document.querySelector("#new-chat");
 const errorElement = document.querySelector("#form-error");
 const connectionStatus = document.querySelector("#connection-status");
+const contextModeSelect = document.querySelector("#context-mode");
 const userTemplate = document.querySelector("#user-message-template");
 const agentTemplate = document.querySelector("#agent-message-template");
 const mentionPicker = document.querySelector("#mention-picker");
@@ -39,6 +40,11 @@ let requestRunning = false;
 
 function getActiveSession() {
   return sessionState.sessions.find((session) => session.id === sessionState.activeSessionId);
+}
+
+function syncActiveSessionControls() {
+  contextModeSelect.value = getActiveSession().contextMode ?? "simple";
+  contextModeSelect.disabled = requestRunning;
 }
 
 function setError(message = "") {
@@ -164,13 +170,14 @@ async function sendMessage() {
   promptInput.disabled = true;
   newChatButton.disabled = true;
   requestRunning = true;
+  syncActiveSessionControls();
   renderSessionList();
   connectionStatus.textContent = "正在连接…";
   await appendRecord(userMessage);
   renderRecord(userMessage);
 
   const pending = new Map(route.providers.map((providerId) => [providerId, createPendingElement(providerId)]));
-  const providerPrompt = buildProviderPrompt(historyBeforeMessage, route.prompt);
+  const providerPrompt = buildProviderPrompt(historyBeforeMessage, route.prompt, getActiveSession().contextMode);
 
   try {
     const results = await askNativeCompanion(providerPrompt, route.providers, {
@@ -215,6 +222,7 @@ async function sendMessage() {
     promptInput.disabled = false;
     newChatButton.disabled = false;
     requestRunning = false;
+    syncActiveSessionControls();
     renderSessionList();
     promptInput.focus();
     scrollToLatest();
@@ -294,6 +302,7 @@ async function saveManualResponse(providerId) {
 
 renderTimeline();
 renderSessionList();
+syncActiveSessionControls();
 sendButton.addEventListener("click", sendMessage);
 promptInput.addEventListener("keydown", (event) => {
   if (!mentionPicker.hidden) {
@@ -339,6 +348,7 @@ newChatButton.addEventListener("click", async () => {
   conversationRecords = getActiveSession().records;
   renderTimeline();
   renderSessionList();
+  syncActiveSessionControls();
   connectionStatus.textContent = "本机直连";
   setError("");
   promptInput.focus();
@@ -354,6 +364,7 @@ sessionList.addEventListener("click", async (event) => {
     conversationRecords = getActiveSession().records;
     renderTimeline();
     renderSessionList();
+    syncActiveSessionControls();
     connectionStatus.textContent = "本地对话已删除";
     setError("");
     promptInput.focus();
@@ -366,7 +377,14 @@ sessionList.addEventListener("click", async (event) => {
   conversationRecords = getActiveSession().records;
   renderTimeline();
   renderSessionList();
+  syncActiveSessionControls();
   connectionStatus.textContent = "已打开历史对话";
   setError("");
   promptInput.focus();
+});
+
+contextModeSelect.addEventListener("change", async () => {
+  if (requestRunning) return;
+  sessionState = await store.setContextMode(contextModeSelect.value);
+  syncActiveSessionControls();
 });

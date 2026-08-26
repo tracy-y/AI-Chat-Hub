@@ -119,3 +119,21 @@ test("deleting the last session creates one empty replacement", async () => {
   assert.equal(state.sessions[0].records.length, 0);
   assert.equal(state.sessions[0].title, "新对话");
 });
+
+test("context mode is saved independently for each session", async () => {
+  const { chromeApi } = createChromeStorage();
+  const store = createChromeChatSessionStore(chromeApi);
+  await store.setContextMode("deep");
+  await store.append({ id: "first", kind: "user", promptText: "策划", createdAt: "2026-08-26T00:00:00.000Z" });
+  const firstId = (await store.load()).activeSessionId;
+  const secondState = await store.startNew();
+
+  assert.equal(secondState.sessions.find((session) => session.id === firstId).contextMode, "deep");
+  assert.equal(secondState.sessions.find((session) => session.id === secondState.activeSessionId).contextMode, "simple");
+});
+
+test("invalid context mode is rejected", async () => {
+  const { chromeApi } = createChromeStorage();
+  const store = createChromeChatSessionStore(chromeApi);
+  await assert.rejects(() => store.setContextMode("unlimited"), /Unknown context mode/);
+});
