@@ -20,3 +20,40 @@ test("conversation store clears all local records", async () => {
   await store.clear();
   assert.deepEqual(await store.list(), []);
 });
+
+test("chrome conversation store serializes concurrent appends", async () => {
+  const storage = new Map();
+  const chromeApi = {
+    storage: {
+      local: {
+        async get(key) {
+          await new Promise((resolve) => setTimeout(resolve, 5));
+          return storage.has(key) ? { [key]: structuredClone(storage.get(key)) } : {};
+        },
+        async set(values) {
+          await new Promise((resolve) => setTimeout(resolve, 5));
+          for (const [key, value] of Object.entries(values)) {
+            storage.set(key, structuredClone(value));
+          }
+        },
+        async remove(key) {
+          storage.delete(key);
+        },
+      },
+    },
+  };
+  const { createChromeConversationStore } = await import(
+    "../../apps/hub-shell/src/storage/conversation-store.js"
+  );
+  const store = createChromeConversationStore(chromeApi);
+
+  await Promise.all([
+    store.append({ id: "atlas", rawText: "Atlas reply" }),
+    store.append({ id: "beacon", rawText: "Beacon reply" }),
+  ]);
+
+  assert.deepEqual(await store.list(), [
+    { id: "atlas", rawText: "Atlas reply" },
+    { id: "beacon", rawText: "Beacon reply" },
+  ]);
+});

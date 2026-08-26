@@ -5,6 +5,8 @@ export function createChromeConversationStore(chromeApi = globalThis.chrome) {
     throw new Error("chrome.storage.local is unavailable");
   }
 
+  let writeQueue = Promise.resolve();
+
   return Object.freeze({
     async list() {
       const result = await chromeApi.storage.local.get(STORAGE_KEY);
@@ -12,14 +14,24 @@ export function createChromeConversationStore(chromeApi = globalThis.chrome) {
     },
 
     async append(conversation) {
-      const existing = await this.list();
-      const next = [...existing, structuredClone(conversation)];
-      await chromeApi.storage.local.set({ [STORAGE_KEY]: next });
-      return structuredClone(conversation);
+      const record = structuredClone(conversation);
+      const write = writeQueue.then(async () => {
+        const result = await chromeApi.storage.local.get(STORAGE_KEY);
+        const existing = result[STORAGE_KEY] ?? [];
+        await chromeApi.storage.local.set({
+          [STORAGE_KEY]: [...existing, record],
+        });
+        return structuredClone(record);
+      });
+
+      writeQueue = write.catch(() => undefined);
+      return write;
     },
 
     async clear() {
-      await chromeApi.storage.local.remove(STORAGE_KEY);
+      const clear = writeQueue.then(() => chromeApi.storage.local.remove(STORAGE_KEY));
+      writeQueue = clear.catch(() => undefined);
+      await clear;
     },
   });
 }
