@@ -94,5 +94,24 @@ export function createChromeChatSessionStore(chromeApi = globalThis.chrome) {
         return state;
       });
     },
+
+    async delete(sessionId) {
+      return enqueue((state) => {
+        const index = state.sessions.findIndex((session) => session.id === sessionId);
+        if (index === -1) throw new TypeError("Unknown chat session");
+        const deletingActive = state.activeSessionId === sessionId;
+        state.sessions.splice(index, 1);
+
+        if (state.sessions.length === 0) {
+          const replacement = createSession();
+          state.sessions.push(replacement);
+          state.activeSessionId = replacement.id;
+        } else if (deletingActive) {
+          const replacement = [...state.sessions].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
+          state.activeSessionId = replacement.id;
+        }
+        return state;
+      });
+    },
   });
 }

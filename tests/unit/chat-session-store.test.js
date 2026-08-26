@@ -82,3 +82,40 @@ test("session store serializes concurrent record appends", async () => {
   const state = await store.load();
   assert.deepEqual(state.sessions[0].records.map((record) => record.id), ["one", "two"]);
 });
+
+test("deleting a saved session preserves the other sessions", async () => {
+  const { chromeApi } = createChromeStorage();
+  const store = createChromeChatSessionStore(chromeApi);
+  await store.append({ id: "old", kind: "user", promptText: "旧对话", createdAt: "2026-08-26T00:00:00.000Z" });
+  const oldId = (await store.load()).activeSessionId;
+  await store.startNew();
+  await store.append({ id: "new", kind: "user", promptText: "新对话", createdAt: "2026-08-26T01:00:00.000Z" });
+
+  const state = await store.delete(oldId);
+  assert.equal(state.sessions.length, 1);
+  assert.equal(state.sessions[0].records[0].id, "new");
+});
+
+test("deleting the active session selects the most recently updated remaining session", async () => {
+  const { chromeApi } = createChromeStorage();
+  const store = createChromeChatSessionStore(chromeApi);
+  await store.append({ id: "old", kind: "user", promptText: "旧对话", createdAt: "2026-08-26T00:00:00.000Z" });
+  const oldId = (await store.load()).activeSessionId;
+  await store.startNew();
+  await store.append({ id: "new", kind: "user", promptText: "新对话", createdAt: "2026-08-26T01:00:00.000Z" });
+  const newId = (await store.load()).activeSessionId;
+
+  const state = await store.delete(newId);
+  assert.equal(state.activeSessionId, oldId);
+});
+
+test("deleting the last session creates one empty replacement", async () => {
+  const { chromeApi } = createChromeStorage();
+  const store = createChromeChatSessionStore(chromeApi);
+  const initial = await store.load();
+  const state = await store.delete(initial.activeSessionId);
+
+  assert.equal(state.sessions.length, 1);
+  assert.equal(state.sessions[0].records.length, 0);
+  assert.equal(state.sessions[0].title, "新对话");
+});

@@ -105,15 +105,20 @@ function renderSessionList() {
   });
   for (const session of sessions) {
     const fragment = sessionItemTemplate.content.cloneNode(true);
-    const button = fragment.querySelector(".session-item");
+    const item = fragment.querySelector(".session-item");
+    const openButton = item.querySelector(".session-open");
+    const deleteButton = item.querySelector(".session-delete");
     const isActive = session.id === sessionState.activeSessionId;
-    button.dataset.sessionId = session.id;
-    button.dataset.active = String(isActive);
-    button.disabled = requestRunning;
-    button.querySelector("strong").textContent = session.title;
-    button.querySelector("small").textContent = `${new Date(session.updatedAt).toLocaleString()} · ${session.records.length} 条消息`;
-    button.querySelector(".session-state").textContent = isActive ? "当前" : "打开";
-    sessionList.append(button);
+    item.dataset.active = String(isActive);
+    openButton.dataset.sessionId = session.id;
+    deleteButton.dataset.deleteSessionId = session.id;
+    deleteButton.dataset.sessionTitle = session.title;
+    openButton.disabled = requestRunning;
+    deleteButton.disabled = requestRunning;
+    openButton.querySelector("strong").textContent = session.title;
+    const stateLabel = isActive ? " · 当前" : "";
+    openButton.querySelector("small").textContent = `${new Date(session.updatedAt).toLocaleString()} · ${session.records.length} 条消息${stateLabel}`;
+    sessionList.append(item);
   }
 }
 
@@ -340,9 +345,24 @@ newChatButton.addEventListener("click", async () => {
 });
 
 sessionList.addEventListener("click", async (event) => {
-  const button = event.target.closest("[data-session-id]");
-  if (!button || requestRunning || button.dataset.sessionId === sessionState.activeSessionId) return;
-  sessionState = await store.select(button.dataset.sessionId);
+  if (requestRunning) return;
+  const deleteButton = event.target.closest("[data-delete-session-id]");
+  if (deleteButton) {
+    const confirmed = confirm(`确定永久删除本机对话“${deleteButton.dataset.sessionTitle}”吗？此操作无法撤销。`);
+    if (!confirmed) return;
+    sessionState = await store.delete(deleteButton.dataset.deleteSessionId);
+    conversationRecords = getActiveSession().records;
+    renderTimeline();
+    renderSessionList();
+    connectionStatus.textContent = "本地对话已删除";
+    setError("");
+    promptInput.focus();
+    return;
+  }
+
+  const openButton = event.target.closest("[data-session-id]");
+  if (!openButton || openButton.dataset.sessionId === sessionState.activeSessionId) return;
+  sessionState = await store.select(openButton.dataset.sessionId);
   conversationRecords = getActiveSession().records;
   renderTimeline();
   renderSessionList();

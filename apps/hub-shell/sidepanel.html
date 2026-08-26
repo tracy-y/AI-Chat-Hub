@@ -104,10 +104,12 @@
     </template>
 
     <template id="session-item-template">
-      <button class="session-item" type="button">
-        <span class="session-copy"><strong></strong><small></small></span>
-        <span class="session-state"></span>
-      </button>
+      <article class="session-item">
+        <button class="session-open" type="button">
+          <span class="session-copy"><strong></strong><small></small></span>
+        </button>
+        <button class="session-delete" type="button" aria-label="删除对话" title="删除这条本地对话">删除</button>
+      </article>
     </template>
 
     <script type="module" src="src/sidepanel.js"></script>

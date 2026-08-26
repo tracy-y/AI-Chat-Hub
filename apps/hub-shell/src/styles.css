@@ -107,14 +107,16 @@ button { cursor: pointer; }
 .history-heading h2 { margin: 0; font-size: 13px; }
 #history-count { color: #7a8781; font-size: 9px; }
 .session-list { display: grid; gap: 6px; }
-.session-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-width: 0; border: 1px solid transparent; border-radius: 11px; padding: 9px 10px; background: #fff; color: #26372f; text-align: left; }
+.session-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px; width: 100%; min-width: 0; border: 1px solid transparent; border-radius: 11px; padding: 3px; background: #fff; color: #26372f; }
 .session-item:hover { border-color: #bdd1c8; background: #f7faf8; }
 .session-item[data-active="true"] { border-color: #a9c9ba; background: #edf6f1; }
-.session-item:disabled { cursor: wait; opacity: 0.65; }
+.session-open { display: block; min-width: 0; border: 0; border-radius: 8px; padding: 7px; background: transparent; color: inherit; text-align: left; }
+.session-delete { border: 0; border-radius: 8px; padding: 7px; background: transparent; color: #9a5149; font-size: 9px; font-weight: 800; }
+.session-delete:hover { background: #f7e5e2; color: #8b3027; }
+.session-open:disabled, .session-delete:disabled { cursor: wait; opacity: 0.55; }
 .session-copy { display: grid; min-width: 0; }
 .session-copy strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .session-copy small { overflow: hidden; margin-top: 3px; color: #7a8781; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
-.session-state { border-radius: 999px; padding: 4px 7px; background: #e7efeb; color: #446558; font-size: 9px; font-weight: 800; }
 
 .manual-fallback { border: 1px solid rgb(24 33 29 / 10%); border-radius: 14px; padding: 11px 13px; background: rgb(255 255 255 / 55%); }
 .manual-fallback > summary { color: #587067; font-size: 11px; font-weight: 800; cursor: pointer; }
@@ -147,6 +149,8 @@ button { cursor: pointer; }
   .mention-picker kbd { border-color: #46544d; background: #17201c; color: #9dd5bf; }
   .session-item { background: #202b26; color: #edf3ef; }
   .session-item:hover, .session-item[data-active="true"] { border-color: #4f7565; background: #26362f; }
+  .session-delete { color: #e2a39d; }
+  .session-delete:hover { background: #482b28; color: #ffc1bb; }
   .message[data-provider="claude"] .agent-avatar { background: #3d3027; color: #e6b796; }
   .message-error .message-body { border-color: #713f3a; background: #35211f; }
   .official-link, .source-link { color: #8fd4bb; }
