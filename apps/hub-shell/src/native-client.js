@@ -1,6 +1,6 @@
 export const NATIVE_HOST_NAME = "com.tracy.ai_chat_hub";
 
-export function askNativeCompanion(prompt, {
+export function askNativeCompanion(prompt, providers, {
   chromeApi = globalThis.chrome,
   onStarted = () => undefined,
   timeoutMs = 190_000,
@@ -42,6 +42,6 @@ export function askNativeCompanion(prompt, {
       finish(() => reject(new Error(detail || "本地 Companion 已断开。")));
     });
 
-    port.postMessage({ id, type: "chat", prompt });
+    port.postMessage({ id, type: "chat", prompt, providers });
   });
 }

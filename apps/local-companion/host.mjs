@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { askAllProviders } from "./src/providers.mjs";
+import { askSelectedProviders } from "./src/providers.mjs";
 import { createNativeMessageDecoder, encodeNativeMessage } from "./src/native-messaging.mjs";
 
-const MAX_PROMPT_CHARACTERS = 50_000;
+const MAX_PROMPT_CHARACTERS = 100_000;
 let queue = Promise.resolve();
 
 function send(message) {
@@ -30,8 +30,14 @@ async function handleMessage(message) {
     return;
   }
 
-  send({ id, type: "started", providers: ["codex", "claude"] });
-  const results = await askAllProviders(message.prompt);
+  const providers = Array.isArray(message.providers) ? [...new Set(message.providers)] : ["codex", "claude"];
+  if (providers.length === 0 || providers.some((providerId) => !["codex", "claude"].includes(providerId))) {
+    send({ id, type: "error", error: "Invalid provider selection" });
+    return;
+  }
+
+  send({ id, type: "started", providers });
+  const results = await askSelectedProviders(message.prompt, providers);
   send({ id, type: "chatResult", results });
 }
 

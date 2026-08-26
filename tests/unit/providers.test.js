@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { askClaude, askCodex } from "../../apps/local-companion/src/providers.mjs";
+import { askClaude, askCodex, askSelectedProviders } from "../../apps/local-companion/src/providers.mjs";
 
 test("Codex receives the exact prompt through stdin with fixed safe arguments", async () => {
   const calls = [];
@@ -47,4 +47,23 @@ test("provider failures do not expose the home path", async () => {
   } finally {
     process.env.HOME = previousHome;
   }
+});
+
+test("selected provider execution does not call unmentioned agents", async () => {
+  let claudeCalls = 0;
+  const results = await askSelectedProviders("prompt", ["claude"], {
+    claude: {
+      run: async () => {
+        claudeCalls += 1;
+        return { code: 0, signal: null, stdout: JSON.stringify({ result: "answer" }), stderr: "" };
+      },
+    },
+  });
+
+  assert.equal(claudeCalls, 1);
+  assert.deepEqual(results.map((result) => result.providerId), ["claude"]);
+});
+
+test("selected provider execution rejects unknown provider IDs", async () => {
+  await assert.rejects(() => askSelectedProviders("prompt", ["unknown"]), /Unsupported provider/);
 });

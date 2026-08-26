@@ -1,6 +1,6 @@
 # Hub Shell
 
-零第三方依赖的 Chrome Manifest V3 侧边栏。默认通过 Native Messaging 连接 Mac 本地 Companion，一次提问并行获得 Codex 与 Claude Agent 的回答；网页手动转接是备用路径。
+零第三方依赖的 Chrome Manifest V3 侧边栏。默认通过 Native Messaging 连接 Mac 本地 Companion，在单一聊天时间线里用 `@codex`、`@claude` 或 `@all` 选择回答者并连续追问；网页手动转接是备用路径。
 
 ## 加载
 
@@ -14,4 +14,4 @@
 
 ## 数据
 
-回答历史保存在 `chrome.storage.local`。扩展没有 AI 网站 host permission，不读取 Cookie、账号 ID 或订阅详情。清除扩展数据或在界面点击“清除全部历史”会删除本地历史。
+用户消息和 Agent 原始回答保存在 `chrome.storage.local`。最近 20 条消息会作为共享上下文发送给本次被点名的 Agent。扩展没有 AI 网站 host permission，不读取 Cookie、账号 ID 或订阅详情。清除扩展数据或在界面点击“新对话”会删除当前本地历史。

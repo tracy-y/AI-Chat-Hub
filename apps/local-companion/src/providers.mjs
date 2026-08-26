@@ -92,8 +92,15 @@ export async function askClaude(prompt, options = {}) {
 }
 
 export async function askAllProviders(prompt, options = {}) {
-  return Promise.all([
-    askCodex(prompt, options.codex),
-    askClaude(prompt, options.claude),
-  ]);
+  return askSelectedProviders(prompt, ["codex", "claude"], options);
+}
+
+const PROVIDERS = Object.freeze({ codex: askCodex, claude: askClaude });
+
+export async function askSelectedProviders(prompt, providerIds, options = {}) {
+  return Promise.all(providerIds.map((providerId) => {
+    const ask = PROVIDERS[providerId];
+    if (!ask) throw new TypeError(`Unsupported provider: ${providerId}`);
+    return ask(prompt, options[providerId]);
+  }));
 }

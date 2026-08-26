@@ -35,7 +35,7 @@ test("native client sends one prompt and returns matching provider results", asy
     },
   };
 
-  const results = await askNativeCompanion("exact prompt", {
+  const results = await askNativeCompanion("exact prompt", ["claude"], {
     chromeApi,
     onStarted: (providers) => started.push(providers),
     timeoutMs: 1_000,
@@ -43,6 +43,7 @@ test("native client sends one prompt and returns matching provider results", asy
 
   assert.deepEqual(connected, [NATIVE_HOST_NAME]);
   assert.equal(posted[0].prompt, "exact prompt");
+  assert.deepEqual(posted[0].providers, ["claude"]);
   assert.deepEqual(started, [["codex", "claude"]]);
   assert.deepEqual(results, [{ providerId: "codex", status: "completed" }]);
 });

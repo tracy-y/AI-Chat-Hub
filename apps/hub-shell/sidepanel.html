@@ -3,73 +3,83 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Chat Hub PoC</title>
+    <title>AI Chat Hub</title>
     <link rel="stylesheet" href="src/styles.css" />
   </head>
   <body>
     <main class="app-shell">
-      <header class="hero">
-        <p class="eyebrow">LOCAL · SUBSCRIPTION FIRST</p>
-        <h1>AI Chat Hub</h1>
-        <p class="subtitle">在一个窗口提问，同时获得两个官方订阅 Agent 的原始回答。</p>
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">LOCAL · SUBSCRIPTION FIRST</p>
+          <h1>AI Chat Hub</h1>
+        </div>
+        <button id="new-chat" class="text-button" type="button">新对话</button>
       </header>
 
-      <section class="composer" aria-labelledby="composer-title">
-        <div class="section-heading">
-          <h2 id="composer-title">直接提问</h2>
-          <span class="badge">凭据留在本机</span>
-        </div>
-        <label for="prompt">问题</label>
-        <textarea id="prompt" rows="6" maxlength="50000" placeholder="输入要同时发给 Codex 和 Claude 的问题…"></textarea>
-        <button id="ask-all" type="button">同时询问 Codex + Claude</button>
-        <p id="form-error" class="form-error" role="alert" hidden></p>
-
-        <div class="provider-progress" aria-live="polite">
-          <div class="progress-item" data-progress-provider="codex">
-            <span>Codex（ChatGPT 订阅）</span><strong>等待提问</strong>
+      <section class="chat-shell" aria-label="AI Chat Hub 对话">
+        <div id="timeline" class="timeline" aria-live="polite">
+          <div id="empty-state" class="empty-state">
+            <span class="empty-mark">@</span>
+            <h2>选择要回答的 Agent</h2>
+            <p><code>@codex</code>、<code>@claude</code> 或 <code>@all</code>。不写 @ 时默认同时询问两个。</p>
           </div>
-          <div class="progress-item" data-progress-provider="claude">
-            <span>Claude Agent（Claude 订阅）</span><strong>等待提问</strong>
+        </div>
+
+        <div class="composer">
+          <div class="mention-bar" aria-label="选择 Agent">
+            <button type="button" data-mention="@codex">@codex</button>
+            <button type="button" data-mention="@claude">@claude</button>
+            <button type="button" data-mention="@all">@all</button>
+            <span id="connection-status">本机直连</span>
+          </div>
+          <label class="sr-only" for="prompt">消息</label>
+          <textarea id="prompt" rows="3" maxlength="50000" placeholder="@codex 帮我分析……"></textarea>
+          <div class="composer-footer">
+            <p id="form-error" class="form-error" role="alert" hidden></p>
+            <span class="privacy-note">最近 20 条作为共享上下文</span>
+            <button id="send-message" type="button" aria-label="发送消息">发送</button>
           </div>
         </div>
       </section>
 
       <details class="manual-fallback">
-        <summary>Companion 不可用时，使用手动保真转接</summary>
-        <p>在官网亲自发送问题，再把完整回复原样粘贴回来。</p>
+        <summary>本地 Companion 不可用？手动保存网页原文</summary>
+        <p>手动回复会关联到最近一条用户消息。</p>
         <div class="relay-grid">
           <article class="relay-card" data-provider="chatgpt">
             <header><p class="provider-name">ChatGPT 网页</p><a class="official-link" href="https://chatgpt.com/" target="_blank" rel="noreferrer">打开官网</a></header>
-            <textarea class="response-input" rows="6" aria-label="粘贴 ChatGPT 原始回复" placeholder="粘贴 ChatGPT 原始回复…"></textarea>
+            <textarea class="response-input" rows="5" aria-label="粘贴 ChatGPT 原始回复" placeholder="粘贴 ChatGPT 原始回复…"></textarea>
             <input class="source-input" type="url" aria-label="ChatGPT 官方会话链接" placeholder="官方会话链接（可选）" />
             <button class="save-response" type="button" data-provider-id="chatgpt">保存原文</button>
             <p class="save-status" role="status"></p>
           </article>
           <article class="relay-card" data-provider="claude">
             <header><p class="provider-name">Claude 网页</p><a class="official-link" href="https://claude.ai/" target="_blank" rel="noreferrer">打开官网</a></header>
-            <textarea class="response-input" rows="6" aria-label="粘贴 Claude 原始回复" placeholder="粘贴 Claude 原始回复…"></textarea>
+            <textarea class="response-input" rows="5" aria-label="粘贴 Claude 原始回复" placeholder="粘贴 Claude 原始回复…"></textarea>
             <input class="source-input" type="url" aria-label="Claude 官方会话链接" placeholder="官方会话链接（可选）" />
             <button class="save-response" type="button" data-provider-id="claude">保存原文</button>
             <p class="save-status" role="status"></p>
           </article>
         </div>
       </details>
-
-      <section aria-labelledby="results-title">
-        <div class="section-heading">
-          <h2 id="results-title">原始回复</h2>
-          <button id="clear-history" class="text-button" type="button">清除全部历史</button>
-        </div>
-        <div id="results" class="results" aria-live="polite"></div>
-      </section>
     </main>
 
-    <template id="result-template">
-      <article class="result-card">
-        <header><div><p class="provider-name"></p><p class="timestamp"></p></div><span class="status"></span></header>
-        <details class="prompt-details"><summary>查看对应问题</summary><pre class="prompt-text"></pre></details>
-        <pre class="response-text"></pre>
-        <a class="source-link" target="_blank" rel="noreferrer" hidden>打开官方会话</a>
+    <template id="user-message-template">
+      <article class="message message-user">
+        <div class="message-meta"><span>你</span><time></time></div>
+        <pre class="message-text"></pre>
+        <p class="message-targets"></p>
+      </article>
+    </template>
+
+    <template id="agent-message-template">
+      <article class="message message-agent">
+        <div class="agent-avatar"></div>
+        <div class="message-body">
+          <div class="message-meta"><span class="provider-name"></span><time></time></div>
+          <pre class="message-text"></pre>
+          <a class="source-link" target="_blank" rel="noreferrer" hidden>打开官方会话</a>
+        </div>
       </article>
     </template>
 
