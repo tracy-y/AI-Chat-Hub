@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Chat Hub PoC</title>
+    <link rel="stylesheet" href="src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">LOCAL POC · MOCK ONLY</p>
+        <h1>AI Chat Hub</h1>
+        <p class="subtitle">一个问题，两条彼此独立、原文保真的回复。</p>
+      </header>
+
+      <section class="composer" aria-labelledby="composer-title">
+        <div class="section-heading">
+          <h2 id="composer-title">发送问题</h2>
+          <span class="badge">无网站权限</span>
+        </div>
+        <label for="prompt">问题</label>
+        <textarea id="prompt" rows="5" placeholder="输入用于本地 Mock 验证的问题…"></textarea>
+        <fieldset>
+          <legend>选择平台</legend>
+          <label class="provider-choice">
+            <input type="checkbox" name="provider" value="mock-a" checked />
+            <span>Mock Atlas</span>
+          </label>
+          <label class="provider-choice">
+            <input type="checkbox" name="provider" value="mock-b" checked />
+            <span>Mock Beacon</span>
+          </label>
+        </fieldset>
+        <button id="submit" type="button">分别发送</button>
+        <p id="form-error" class="form-error" role="alert" hidden></p>
+      </section>
+
+      <section aria-labelledby="results-title">
+        <div class="section-heading">
+          <h2 id="results-title">原始回复</h2>
+          <button id="clear-history" class="text-button" type="button">清除 Mock 历史</button>
+        </div>
+        <div id="results" class="results" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <template id="result-template">
+      <article class="result-card">
+        <header>
+          <div>
+            <p class="provider-name"></p>
+            <p class="timestamp"></p>
+          </div>
+          <span class="status"></span>
+        </header>
+        <pre class="response-text"></pre>
+      </article>
+    </template>
+
+    <script type="module" src="src/sidepanel.js"></script>
+  </body>
+</html>

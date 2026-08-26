@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "AI Chat Hub PoC",
+  "version": "0.1.0",
+  "description": "Local-first multi-provider workspace using mock providers only.",
+  "minimum_chrome_version": "114",
+  "permissions": ["sidePanel", "storage"],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Open AI Chat Hub"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}

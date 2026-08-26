@@ -25,4 +25,12 @@ tests/acceptance/             保真、隔离、恢复与失败测试
 
 ## 当前状态
 
-尚未接入任何真实平台，尚未复制或派生 Open WebUI。工程 PoC 优先验证“浏览器扩展侧边栏 + 本地数据 + Mock Adapter”，真实平台适配器的下一决策门是选择首批两个官方平台并核对当前条款与浏览器自动化边界。
+已建立零第三方依赖的 Chrome Manifest V3 侧边栏 PoC，当前只包含两个 Mock Provider，并且没有任何真实 AI 网站权限。真实平台适配器的下一决策门是选择首批两个官方平台并核对当前条款与浏览器自动化边界。
+
+## 本地验证
+
+```bash
+npm run verify
+```
+
+扩展的本地加载步骤见 [`apps/hub-shell/README.md`](./apps/hub-shell/README.md)。
