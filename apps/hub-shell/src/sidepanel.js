@@ -4,7 +4,7 @@ import { buildProviderPrompt } from "./core/conversation-context.js";
 import { applyMentionSelection, findMentionQuery } from "./core/mention-autocomplete.js";
 import { parseMentionRouting } from "./core/mention-routing.js";
 import { createUserMessage } from "./core/user-message.js";
-import { askNativeCompanion } from "./native-client.js";
+import { askNativeCompanion, getNativeInstructions, saveNativeInstructions } from "./native-client.js";
 import { createChromeChatSessionStore } from "./storage/chat-session-store.js";
 
 const PROVIDER_LABELS = Object.freeze({
@@ -31,6 +31,10 @@ const pickerOptions = [...mentionPicker.querySelectorAll("[data-agent-token]")];
 const sessionList = document.querySelector("#session-list");
 const historyCount = document.querySelector("#history-count");
 const sessionItemTemplate = document.querySelector("#session-item-template");
+const instructionInput = document.querySelector("#user-instructions");
+const instructionCount = document.querySelector("#instruction-count");
+const instructionStatus = document.querySelector("#instruction-status");
+const saveInstructionsButton = document.querySelector("#save-instructions");
 let sessionState = await store.load();
 let conversationRecords = getActiveSession().records;
 let activeMention = null;
@@ -50,6 +54,37 @@ function syncActiveSessionControls() {
 function setError(message = "") {
   errorElement.textContent = message;
   errorElement.hidden = !message;
+}
+
+function updateInstructionCount() {
+  instructionCount.textContent = `${instructionInput.value.length} / ${instructionInput.maxLength}`;
+}
+
+async function loadInstructions() {
+  try {
+    const result = await getNativeInstructions();
+    instructionInput.value = result.content;
+    instructionStatus.textContent = result.content ? "已从本机 README.md 载入。" : "尚未保存长期说明。";
+  } catch (error) {
+    instructionStatus.textContent = error instanceof Error ? error.message : String(error);
+    instructionStatus.dataset.status = "failed";
+  }
+  updateInstructionCount();
+}
+
+async function saveInstructions() {
+  saveInstructionsButton.disabled = true;
+  instructionStatus.dataset.status = "";
+  instructionStatus.textContent = "正在保存…";
+  try {
+    await saveNativeInstructions(instructionInput.value);
+    instructionStatus.textContent = "已保存到本机 instruction/README.md，之后的 Agent 请求会参考它。";
+  } catch (error) {
+    instructionStatus.textContent = error instanceof Error ? error.message : String(error);
+    instructionStatus.dataset.status = "failed";
+  } finally {
+    saveInstructionsButton.disabled = false;
+  }
 }
 
 function formatTime(value) {
@@ -303,6 +338,7 @@ async function saveManualResponse(providerId) {
 renderTimeline();
 renderSessionList();
 syncActiveSessionControls();
+await loadInstructions();
 sendButton.addEventListener("click", sendMessage);
 promptInput.addEventListener("keydown", (event) => {
   if (!mentionPicker.hidden) {
@@ -388,3 +424,5 @@ contextModeSelect.addEventListener("change", async () => {
   sessionState = await store.setContextMode(contextModeSelect.value);
   syncActiveSessionControls();
 });
+instructionInput.addEventListener("input", updateInstructionCount);
+saveInstructionsButton.addEventListener("click", saveInstructions);

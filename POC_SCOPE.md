@@ -25,6 +25,7 @@ Chrome Side Panel
 5. 本机多会话历史、会话切换、最近 20 条共享上下文，以及不删除旧记录的“新对话”。
 6. Companion 安装、固定扩展来源、消息长度、超时和输出上限。
 7. 手动网页复制作为 Companion 不可用时的保真兜底。
+8. 全局用户长期说明独立保存为 Mac 本地 `instructions/README.md`，由 Companion 安全读写并提供给被选中的 Agent，不进入 Git 或聊天存储。
 
 ## Out of Scope
 

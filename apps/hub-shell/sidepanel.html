@@ -67,6 +67,18 @@
         <div id="session-list" class="session-list"></div>
       </section>
 
+      <details class="instruction-panel">
+        <summary>用户 Instruction · 所有 Agent 长期参考</summary>
+        <p class="instruction-help">内容仅保存在这台 Mac，但提问时会发送给被选中的官方 Agent。不要填写密码、Cookie、API key 或验证码。</p>
+        <label for="user-instructions">本机 instruction/README.md</label>
+        <textarea id="user-instructions" rows="9" maxlength="20000" placeholder="例如：请称呼我为…；默认使用中文；我的长期项目目标是…"></textarea>
+        <div class="instruction-footer">
+          <span id="instruction-count">0 / 20000</span>
+          <button id="save-instructions" type="button">保存 Instruction</button>
+        </div>
+        <p id="instruction-status" class="save-status" role="status"></p>
+      </details>
+
       <details class="manual-fallback">
         <summary>本地 Companion 不可用？手动保存网页原文</summary>
         <p>手动回复会关联到最近一条用户消息。</p>

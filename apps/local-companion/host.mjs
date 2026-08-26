@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { askSelectedProviders } from "./src/providers.mjs";
 import { createNativeMessageDecoder, encodeNativeMessage } from "./src/native-messaging.mjs";
+import { addUserInstructionsToPrompt, MAX_INSTRUCTION_CHARACTERS, readUserInstructions, writeUserInstructions } from "./src/user-instructions.mjs";
 
 const MAX_PROMPT_CHARACTERS = 100_000;
 let queue = Promise.resolve();
@@ -14,6 +15,22 @@ async function handleMessage(message) {
 
   if (message?.type === "ping") {
     send({ id, type: "pong", version: 1 });
+    return;
+  }
+
+  if (message?.type === "instructions:get") {
+    const content = await readUserInstructions();
+    send({ id, type: "instructions", content, maxCharacters: MAX_INSTRUCTION_CHARACTERS });
+    return;
+  }
+
+  if (message?.type === "instructions:set") {
+    if (typeof message.content !== "string" || message.content.length > MAX_INSTRUCTION_CHARACTERS) {
+      send({ id, type: "error", error: "Invalid instruction content" });
+      return;
+    }
+    await writeUserInstructions(message.content);
+    send({ id, type: "instructionsSaved", characters: message.content.length });
     return;
   }
 
@@ -37,7 +54,9 @@ async function handleMessage(message) {
   }
 
   send({ id, type: "started", providers });
-  const results = await askSelectedProviders(message.prompt, providers);
+  const instructions = await readUserInstructions();
+  const providerPrompt = addUserInstructionsToPrompt(message.prompt, instructions);
+  const results = await askSelectedProviders(providerPrompt, providers);
   send({ id, type: "chatResult", results });
 }
 

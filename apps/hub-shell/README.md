@@ -15,3 +15,5 @@
 ## 数据
 
 用户消息、Agent 原始回答、多个会话及每个会话的上下文档位保存在 `chrome.storage.local`。点击“新对话”只新建会话，旧会话仍在下方历史列表中；每条历史记录可以在确认后单独永久删除。`0.2.x` 的旧数据会自动迁移。上下文可选简单 20 条、一般 50 条或深度 100 条，并有字符上限以优先保留最新内容。扩展没有 AI 网站 host permission，不读取 Cookie、账号 ID 或订阅详情。
+
+全局用户说明不进入 `chrome.storage.local`，而是通过 Companion 单独读写 `~/Library/Application Support/AI Chat Hub/instructions/README.md`。它会随提问发送给选中的 Agent；不要保存任何登录凭据。安装器只首次创建模板，不覆盖现有内容。

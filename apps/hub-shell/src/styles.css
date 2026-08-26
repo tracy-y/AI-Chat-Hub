@@ -120,9 +120,16 @@ button { cursor: pointer; }
 .session-copy strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .session-copy small { overflow: hidden; margin-top: 3px; color: #7a8781; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 
-.manual-fallback { border: 1px solid rgb(24 33 29 / 10%); border-radius: 14px; padding: 11px 13px; background: rgb(255 255 255 / 55%); }
-.manual-fallback > summary { color: #587067; font-size: 11px; font-weight: 800; cursor: pointer; }
+.manual-fallback, .instruction-panel { border: 1px solid rgb(24 33 29 / 10%); border-radius: 14px; padding: 11px 13px; background: rgb(255 255 255 / 55%); }
+.manual-fallback > summary, .instruction-panel > summary { color: #587067; font-size: 11px; font-weight: 800; cursor: pointer; }
 .manual-fallback > p { color: #6d7772; font-size: 11px; }
+.instruction-help { color: #6d7772; font-size: 10px; line-height: 1.55; }
+.instruction-panel > label { display: block; margin: 10px 0 5px; color: #4d6259; font-size: 10px; font-weight: 800; }
+#user-instructions { width: 100%; min-width: 0; resize: vertical; border: 1px solid #c8cec9; border-radius: 10px; padding: 10px; background: #fff; color: #18211d; font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.instruction-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 7px; }
+#instruction-count { color: #7a8781; font-size: 9px; }
+#save-instructions { border: 0; border-radius: 9px; padding: 8px 10px; background: #365f51; color: #fff; font-size: 10px; font-weight: 800; }
+#save-instructions:disabled { cursor: wait; opacity: 0.55; }
 .relay-grid { display: grid; gap: 10px; margin-top: 10px; }
 .relay-card { display: grid; gap: 8px; border-top: 1px solid #d9dedb; padding-top: 10px; }
 .relay-card header { display: flex; align-items: center; justify-content: space-between; }
@@ -140,9 +147,9 @@ button { cursor: pointer; }
 
 @media (prefers-color-scheme: dark) {
   :root, body { background: #121815; color: #edf3ef; }
-  .chat-shell, .manual-fallback, .conversation-history { border-color: rgb(255 255 255 / 12%); background: #19211d; }
+  .chat-shell, .manual-fallback, .instruction-panel, .conversation-history { border-color: rgb(255 255 255 / 12%); background: #19211d; }
   .empty-state h2 { color: #eef4f0; }
-  .text-button, .message-body, #prompt, #context-mode, .response-input, .source-input { border-color: #46544d; background: #202b26; color: #edf3ef; }
+  .text-button, .message-body, #prompt, #context-mode, #user-instructions, .response-input, .source-input { border-color: #46544d; background: #202b26; color: #edf3ef; }
   .composer { border-color: #36433d; background: #17201c; }
   .agent-avatar { background: #293d35; color: #9dd5bf; }
   .mention-picker { border-color: #46544d; background: #202b26; }

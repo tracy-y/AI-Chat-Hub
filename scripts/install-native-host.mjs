@@ -5,6 +5,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { DEFAULT_INSTRUCTION_TEMPLATE, getInstructionPath } from "../apps/local-companion/src/user-instructions.mjs";
 
 const HOST_NAME = "com.tracy.ai_chat_hub";
 const DEFAULT_EXTENSION_ID = "kciebkgpifidpicfbhpmdddibfnnhkgg";
@@ -41,6 +42,7 @@ const supportDirectory = join(targetRoot, "Library", "Application Support", "AI 
 const launcherPath = join(supportDirectory, "native-host.sh");
 const manifestDirectory = join(targetRoot, "Library", "Application Support", "Google", "Chrome", "NativeMessagingHosts");
 const manifestPath = join(manifestDirectory, `${HOST_NAME}.json`);
+const instructionPath = getInstructionPath(targetRoot);
 
 await mkdir(supportDirectory, { recursive: true, mode: 0o700 });
 await mkdir(manifestDirectory, { recursive: true });
@@ -65,5 +67,15 @@ const manifest = {
 await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
 await chmod(manifestPath, 0o600);
 
+await mkdir(dirname(instructionPath), { recursive: true, mode: 0o700 });
+await chmod(dirname(instructionPath), 0o700);
+try {
+  await writeFile(instructionPath, DEFAULT_INSTRUCTION_TEMPLATE, { encoding: "utf8", mode: 0o600, flag: "wx" });
+} catch (error) {
+  if (error?.code !== "EEXIST") throw error;
+}
+await chmod(instructionPath, 0o600);
+
 console.log(`Installed ${HOST_NAME} for Chrome extension ${extensionId}.`);
 console.log(`Manifest: ${manifestPath}`);
+console.log(`User instructions: ${instructionPath}`);
