@@ -1,0 +1,34 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Browser credentials and profiles must never enter this repository
+browser-data/
+browser-profile/
+cookies*.json
+storage-state*.json
+
+# Local application data
+data/
+logs/
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.venv/
+__pycache__/
+
+# Tooling and OS files
+.DS_Store
+.idea/
+.vscode/
+coverage/
+tmp/
