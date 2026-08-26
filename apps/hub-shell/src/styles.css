@@ -36,6 +36,7 @@ button { cursor: pointer; }
 .app-header h1 { margin: 0; font: 700 24px/1.1 Georgia, "Times New Roman", serif; letter-spacing: -0.035em; }
 .eyebrow { margin: 0 0 4px; color: #386858; font-size: 9px; font-weight: 800; letter-spacing: 0.14em; }
 .text-button { border: 1px solid #c8d1cc; border-radius: 999px; padding: 7px 10px; background: #fff; color: #355d4f; font-size: 11px; font-weight: 700; }
+.text-button:disabled { cursor: wait; opacity: 0.55; }
 
 .chat-shell {
   display: grid;
@@ -101,6 +102,20 @@ button { cursor: pointer; }
 #send-message:disabled { cursor: wait; opacity: 0.55; }
 .form-error { flex: 1; margin: 0; color: #a23b31; font-size: 10px; }
 
+.conversation-history { min-width: 0; border: 1px solid rgb(24 33 29 / 10%); border-radius: 16px; padding: 12px; background: rgb(255 255 255 / 60%); }
+.history-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.history-heading h2 { margin: 0; font-size: 13px; }
+#history-count { color: #7a8781; font-size: 9px; }
+.session-list { display: grid; gap: 6px; }
+.session-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-width: 0; border: 1px solid transparent; border-radius: 11px; padding: 9px 10px; background: #fff; color: #26372f; text-align: left; }
+.session-item:hover { border-color: #bdd1c8; background: #f7faf8; }
+.session-item[data-active="true"] { border-color: #a9c9ba; background: #edf6f1; }
+.session-item:disabled { cursor: wait; opacity: 0.65; }
+.session-copy { display: grid; min-width: 0; }
+.session-copy strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.session-copy small { overflow: hidden; margin-top: 3px; color: #7a8781; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.session-state { border-radius: 999px; padding: 4px 7px; background: #e7efeb; color: #446558; font-size: 9px; font-weight: 800; }
+
 .manual-fallback { border: 1px solid rgb(24 33 29 / 10%); border-radius: 14px; padding: 11px 13px; background: rgb(255 255 255 / 55%); }
 .manual-fallback > summary { color: #587067; font-size: 11px; font-weight: 800; cursor: pointer; }
 .manual-fallback > p { color: #6d7772; font-size: 11px; }
@@ -121,7 +136,7 @@ button { cursor: pointer; }
 
 @media (prefers-color-scheme: dark) {
   :root, body { background: #121815; color: #edf3ef; }
-  .chat-shell, .manual-fallback { border-color: rgb(255 255 255 / 12%); background: #19211d; }
+  .chat-shell, .manual-fallback, .conversation-history { border-color: rgb(255 255 255 / 12%); background: #19211d; }
   .empty-state h2 { color: #eef4f0; }
   .text-button, .message-body, #prompt, .response-input, .source-input { border-color: #46544d; background: #202b26; color: #edf3ef; }
   .composer { border-color: #36433d; background: #17201c; }
@@ -130,6 +145,8 @@ button { cursor: pointer; }
   .mention-picker button { color: #edf3ef; }
   .mention-picker button[aria-selected="true"], .mention-picker button:hover { background: #293d35; }
   .mention-picker kbd { border-color: #46544d; background: #17201c; color: #9dd5bf; }
+  .session-item { background: #202b26; color: #edf3ef; }
+  .session-item:hover, .session-item[data-active="true"] { border-color: #4f7565; background: #26362f; }
   .message[data-provider="claude"] .agent-avatar { background: #3d3027; color: #e6b796; }
   .message-error .message-body { border-color: #713f3a; background: #35211f; }
   .official-link, .source-link { color: #8fd4bb; }

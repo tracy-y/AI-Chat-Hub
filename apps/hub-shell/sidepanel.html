@@ -54,6 +54,14 @@
         </div>
       </section>
 
+      <section class="conversation-history" aria-labelledby="history-title">
+        <div class="history-heading">
+          <h2 id="history-title">历史对话</h2>
+          <span id="history-count"></span>
+        </div>
+        <div id="session-list" class="session-list"></div>
+      </section>
+
       <details class="manual-fallback">
         <summary>本地 Companion 不可用？手动保存网页原文</summary>
         <p>手动回复会关联到最近一条用户消息。</p>
@@ -93,6 +101,13 @@
           <a class="source-link" target="_blank" rel="noreferrer" hidden>打开官方会话</a>
         </div>
       </article>
+    </template>
+
+    <template id="session-item-template">
+      <button class="session-item" type="button">
+        <span class="session-copy"><strong></strong><small></small></span>
+        <span class="session-state"></span>
+      </button>
     </template>
 
     <script type="module" src="src/sidepanel.js"></script>

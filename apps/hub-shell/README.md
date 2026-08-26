@@ -14,4 +14,4 @@
 
 ## 数据
 
-用户消息和 Agent 原始回答保存在 `chrome.storage.local`。最近 20 条消息会作为共享上下文发送给本次被点名的 Agent。扩展没有 AI 网站 host permission，不读取 Cookie、账号 ID 或订阅详情。清除扩展数据或在界面点击“新对话”会删除当前本地历史。
+用户消息、Agent 原始回答和多个会话保存在 `chrome.storage.local`。点击“新对话”只新建会话，旧会话仍在下方历史列表中；`0.2.x` 的旧数据会自动迁移。最近 20 条消息会作为当前会话的共享上下文发送给本次被点名的 Agent。扩展没有 AI 网站 host permission，不读取 Cookie、账号 ID 或订阅详情。

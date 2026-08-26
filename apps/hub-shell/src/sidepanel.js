@@ -5,7 +5,7 @@ import { applyMentionSelection, findMentionQuery } from "./core/mention-autocomp
 import { parseMentionRouting } from "./core/mention-routing.js";
 import { createUserMessage } from "./core/user-message.js";
 import { askNativeCompanion } from "./native-client.js";
-import { createChromeConversationStore } from "./storage/conversation-store.js";
+import { createChromeChatSessionStore } from "./storage/chat-session-store.js";
 
 const PROVIDER_LABELS = Object.freeze({
   codex: "Codex（ChatGPT 订阅）",
@@ -15,7 +15,7 @@ const adapters = new Map([
   ["chatgpt", createManualRelayAdapter({ id: "chatgpt", label: "ChatGPT 网页", officialUrl: "https://chatgpt.com/", allowedHosts: ["chatgpt.com"] })],
   ["claude", createManualRelayAdapter({ id: "claude", label: "Claude 网页", officialUrl: "https://claude.ai/", allowedHosts: ["claude.ai"] })],
 ]);
-const store = createChromeConversationStore();
+const store = createChromeChatSessionStore();
 const timeline = document.querySelector("#timeline");
 const emptyState = document.querySelector("#empty-state");
 const promptInput = document.querySelector("#prompt");
@@ -27,10 +27,19 @@ const userTemplate = document.querySelector("#user-message-template");
 const agentTemplate = document.querySelector("#agent-message-template");
 const mentionPicker = document.querySelector("#mention-picker");
 const pickerOptions = [...mentionPicker.querySelectorAll("[data-agent-token]")];
-let conversationRecords = await store.list();
+const sessionList = document.querySelector("#session-list");
+const historyCount = document.querySelector("#history-count");
+const sessionItemTemplate = document.querySelector("#session-item-template");
+let sessionState = await store.load();
+let conversationRecords = getActiveSession().records;
 let activeMention = null;
 let visiblePickerOptions = [];
 let activePickerIndex = 0;
+let requestRunning = false;
+
+function getActiveSession() {
+  return sessionState.sessions.find((session) => session.id === sessionState.activeSessionId);
+}
 
 function setError(message = "") {
   errorElement.textContent = message;
@@ -79,6 +88,35 @@ function renderRecord(record) {
   return element;
 }
 
+function renderTimeline() {
+  timeline.replaceChildren(emptyState);
+  emptyState.hidden = conversationRecords.length > 0;
+  for (const record of conversationRecords) renderRecord(record);
+  scrollToLatest();
+}
+
+function renderSessionList() {
+  sessionList.replaceChildren();
+  historyCount.textContent = `${sessionState.sessions.length} 个本地对话`;
+  const sessions = [...sessionState.sessions].sort((left, right) => {
+    if (left.id === sessionState.activeSessionId) return -1;
+    if (right.id === sessionState.activeSessionId) return 1;
+    return right.updatedAt.localeCompare(left.updatedAt);
+  });
+  for (const session of sessions) {
+    const fragment = sessionItemTemplate.content.cloneNode(true);
+    const button = fragment.querySelector(".session-item");
+    const isActive = session.id === sessionState.activeSessionId;
+    button.dataset.sessionId = session.id;
+    button.dataset.active = String(isActive);
+    button.disabled = requestRunning;
+    button.querySelector("strong").textContent = session.title;
+    button.querySelector("small").textContent = `${new Date(session.updatedAt).toLocaleString()} · ${session.records.length} 条消息`;
+    button.querySelector(".session-state").textContent = isActive ? "当前" : "打开";
+    sessionList.append(button);
+  }
+}
+
 function createPendingElement(providerId) {
   const element = createAgentElement({
     kind: "pending",
@@ -94,8 +132,9 @@ function createPendingElement(providerId) {
 }
 
 async function appendRecord(record) {
-  await store.append(record);
-  conversationRecords.push(record);
+  sessionState = await store.append(record);
+  conversationRecords = getActiveSession().records;
+  renderSessionList();
 }
 
 async function sendMessage() {
@@ -118,6 +157,9 @@ async function sendMessage() {
   promptInput.value = "";
   sendButton.disabled = true;
   promptInput.disabled = true;
+  newChatButton.disabled = true;
+  requestRunning = true;
+  renderSessionList();
   connectionStatus.textContent = "正在连接…";
   await appendRecord(userMessage);
   renderRecord(userMessage);
@@ -166,6 +208,9 @@ async function sendMessage() {
   } finally {
     sendButton.disabled = false;
     promptInput.disabled = false;
+    newChatButton.disabled = false;
+    requestRunning = false;
+    renderSessionList();
     promptInput.focus();
     scrollToLatest();
   }
@@ -242,7 +287,8 @@ async function saveManualResponse(providerId) {
   }
 }
 
-for (const record of conversationRecords) renderRecord(record);
+renderTimeline();
+renderSessionList();
 sendButton.addEventListener("click", sendMessage);
 promptInput.addEventListener("keydown", (event) => {
   if (!mentionPicker.hidden) {
@@ -283,12 +329,24 @@ for (const button of document.querySelectorAll(".save-response")) {
   button.addEventListener("click", () => saveManualResponse(button.dataset.providerId));
 }
 newChatButton.addEventListener("click", async () => {
-  if (!confirm("开始新对话并删除当前本地聊天记录吗？")) return;
-  await store.clear();
-  conversationRecords = [];
-  timeline.replaceChildren(emptyState);
-  emptyState.hidden = false;
+  if (requestRunning) return;
+  sessionState = await store.startNew();
+  conversationRecords = getActiveSession().records;
+  renderTimeline();
+  renderSessionList();
   connectionStatus.textContent = "本机直连";
+  setError("");
+  promptInput.focus();
+});
+
+sessionList.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-session-id]");
+  if (!button || requestRunning || button.dataset.sessionId === sessionState.activeSessionId) return;
+  sessionState = await store.select(button.dataset.sessionId);
+  conversationRecords = getActiveSession().records;
+  renderTimeline();
+  renderSessionList();
+  connectionStatus.textContent = "已打开历史对话";
   setError("");
   promptInput.focus();
 });
