@@ -44,7 +44,7 @@ button, textarea, input { font: inherit; }
   line-height: 1.55;
 }
 
-.composer, .result-card, .relay-card {
+.composer, .result-card, .relay-card, .manual-fallback {
   border: 1px solid rgb(24 33 29 / 12%);
   border-radius: 18px;
   background: rgb(255 255 255 / 72%);
@@ -118,7 +118,7 @@ legend { width: 100%; margin-bottom: 6px; }
   background: #fafbf9;
 }
 
-#copy-prompt, .save-response {
+#ask-all, .save-response {
   border: 0;
   border-radius: 12px;
   padding: 12px 16px;
@@ -128,7 +128,34 @@ legend { width: 100%; margin-bottom: 6px; }
   cursor: pointer;
 }
 
-#copy-prompt:disabled, .save-response:disabled { cursor: wait; opacity: 0.62; }
+#ask-all:disabled, .save-response:disabled { cursor: wait; opacity: 0.62; }
+
+.provider-progress {
+  display: grid;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.progress-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: rgb(31 92 72 / 7%);
+  color: #53615b;
+  font-size: 11px;
+}
+
+.progress-item strong { color: #456057; }
+.progress-item[data-status="running"] strong { color: #a35e15; }
+.progress-item[data-status="completed"] strong { color: #1f694d; }
+.progress-item[data-status="failed"] strong { color: #a23b31; }
+
+.manual-fallback { padding: 14px 16px; }
+.manual-fallback > summary { color: #48665a; font-size: 12px; font-weight: 800; cursor: pointer; }
+.manual-fallback > p { color: #6d7772; font-size: 12px; line-height: 1.5; }
 
 .relay-grid {
   display: grid;
@@ -230,7 +257,8 @@ legend { width: 100%; margin-bottom: 6px; }
   :root, body { background: #121815; color: #edf3ef; }
   body { background: radial-gradient(circle at top right, rgb(75 150 124 / 18%), transparent 45%), #121815; }
   .subtitle, label, legend { color: #aebbb5; }
-  .composer, .result-card, .relay-card, .provider-choice { border-color: rgb(255 255 255 / 12%); background: rgb(31 42 37 / 90%); }
+  .composer, .result-card, .relay-card, .provider-choice, .manual-fallback { border-color: rgb(255 255 255 / 12%); background: rgb(31 42 37 / 90%); }
+  .progress-item { background: rgb(143 212 187 / 8%); color: #aebbb5; }
   textarea, .source-input { border-color: #53615a; background: #17201c; color: #edf3ef; }
   .official-link, .source-link { color: #8fd4bb; }
 }

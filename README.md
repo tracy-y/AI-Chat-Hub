@@ -1,36 +1,33 @@
 # AI Chat Hub
 
-本地、订阅优先、官方回复保真、多平台统一窗口。
+本地、订阅优先、官方 Agent 原文保真、多平台统一窗口。
 
-当前阶段是技术 PoC 初始化：先验证两个官方网页会话能否在凭据不离开 Mac、回复不被改写的前提下可靠接入，再决定具体应用框架，以及是否值得评估 Open WebUI 的独立派生路线。
+AI Chat Hub 是一个 Mac 本地 Chrome 侧边栏 PoC。用户只输入一次问题，Hub 通过本地 Native Messaging Companion 并行调用已经登录的 Codex 与 Claude 官方客户端，并分别保存两份原始输出。默认路线不使用模型 API，不读取浏览器 Cookie，也不包含 AI Council 的角色、路由或 Consensus。
 
-项目首先供开发者本人在 Mac 本地使用，成熟后通过 GitHub 公开。每位使用者必须自行注册并登录自己的官方 AI 账号、使用自己的有效订阅；本项目不提供共享账号、共享订阅或 Cookie 托管。
+> 当前“直接回答”来自 Codex 和 Claude Agent 客户端，不是对 ChatGPT.com / Claude.ai 网页的自动控制，因此不保证与网页产品逐字产生相同回答。
 
-## 项目基线
+## 隐私边界
+
+- Codex 与 Claude 的账号和订阅登录由各自官方客户端管理。
+- Prompt 只在扩展、Mac 本地 Companion 与官方客户端之间流转。
+- Companion 不持久化 Prompt、回复、账号数据或运行日志。
+- 历史只保存在本机 `chrome.storage.local`；仓库不保存 Cookie、token、邮箱或私人对话。
+- Chrome 扩展不申请 ChatGPT 或 Claude 网站访问权限。
+
+## 本机运行
+
+前置条件：Node.js 20+、Chrome，以及已经完成订阅登录的 `codex` 和 `claude` CLI。
+
+```bash
+npm run verify
+npm run install:native-host
+```
+
+然后打开 `chrome://extensions`，启用开发者模式，选择“加载已解压的扩展程序”，加载 `apps/hub-shell`。修改代码或重新安装 Companion 后，在扩展卡片点击“重新加载”。
+
+## 项目资料
 
 - [一页产品定义](./PRODUCT_DEFINITION.md)
 - [技术 PoC 范围](./POC_SCOPE.md)
 - [创建、开发、验收全流程](./MASTER_DEVELOPMENT_PLAN.md)
-
-## 目录
-
-```text
-apps/hub-shell/               Mac 本地统一窗口
-packages/core/                平台无关领域模型与任务状态
-packages/provider-adapters/   官方网页平台适配器
-packages/local-store/         本地持久化与迁移
-docs/decisions/               架构决策记录
-tests/acceptance/             保真、隔离、恢复与失败测试
-```
-
-## 当前状态
-
-已建立零第三方依赖的 Chrome Manifest V3 侧边栏 PoC。当前采用 ChatGPT + Claude 手动辅助转接：用户亲自在官方页面发送并复制回复，Hub 只保存用户明确粘贴的原文。扩展没有任何真实 AI 网站权限，也不读取账号或 Cookie。
-
-## 本地验证
-
-```bash
-npm run verify
-```
-
-扩展的本地加载步骤见 [`apps/hub-shell/README.md`](./apps/hub-shell/README.md)。
+- [直接回答架构决策](./docs/decisions/0004-subscription-agent-direct-mode.md)

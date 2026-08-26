@@ -1,6 +1,6 @@
 # ADR 0003: Real provider access gate
 
-- Status: Accepted
+- Status: Superseded by ADR 0004
 - Date: 2026-08-26
 
 ## Context

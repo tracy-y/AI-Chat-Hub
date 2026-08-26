@@ -1,21 +1,17 @@
 # Hub Shell
 
-Dependency-free Chrome Manifest V3 side-panel PoC. It provides a manual relay for ChatGPT and Claude and requests no access to either website.
+零第三方依赖的 Chrome Manifest V3 侧边栏。默认通过 Native Messaging 连接 Mac 本地 Companion，一次提问并行获得 Codex 与 Claude Agent 的回答；网页手动转接是备用路径。
 
-## Local loading
+## 加载
 
-1. Open `chrome://extensions`.
-2. Enable **Developer mode**.
-3. Choose **Load unpacked**.
-4. Select this `apps/hub-shell` directory.
-5. Pin AI Chat Hub and click its toolbar icon to open the side panel.
+1. 在项目根目录运行 `npm run install:native-host`。
+2. 打开 `chrome://extensions`。
+3. 启用“开发者模式”。
+4. 点击“加载已解压的扩展程序”，选择本目录 `apps/hub-shell`。
+5. 固定 AI Chat Hub 图标并点击，打开侧边栏。
 
-## Workflow
+扩展 ID 由公开的 manifest key 固定为 `kciebkgpifidpicfbhpmdddibfnnhkgg`，Native host 只接受该扩展连接。manifest key 不是账号密钥或签名私钥。
 
-1. Write a prompt in Hub and copy it.
-2. Open each official website from Hub.
-3. Send the prompt yourself using your own account.
-4. Use the official copy action and paste the response into Hub.
-5. Optionally paste the official conversation URL, then save the unchanged response locally.
+## 数据
 
-The PoC stores manually pasted conversations in `chrome.storage.local`. It never reads or stores browser cookies, account identifiers, or subscription details.
+回答历史保存在 `chrome.storage.local`。扩展没有 AI 网站 host permission，不读取 Cookie、账号 ID 或订阅详情。清除扩展数据或在界面点击“清除全部历史”会删除本地历史。

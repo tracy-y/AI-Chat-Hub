@@ -1,24 +1,15 @@
 import { createManualRelayAdapter } from "./adapters/manual-relay-adapter.js";
+import { createNativeAgentResponse } from "./adapters/native-agent-adapter.js";
+import { askNativeCompanion } from "./native-client.js";
 import { createChromeConversationStore } from "./storage/conversation-store.js";
 
 const adapters = new Map([
-  ["chatgpt", createManualRelayAdapter({
-    id: "chatgpt",
-    label: "ChatGPT",
-    officialUrl: "https://chatgpt.com/",
-    allowedHosts: ["chatgpt.com"],
-  })],
-  ["claude", createManualRelayAdapter({
-    id: "claude",
-    label: "Claude",
-    officialUrl: "https://claude.ai/",
-    allowedHosts: ["claude.ai"],
-  })],
+  ["chatgpt", createManualRelayAdapter({ id: "chatgpt", label: "ChatGPT 网页", officialUrl: "https://chatgpt.com/", allowedHosts: ["chatgpt.com"] })],
+  ["claude", createManualRelayAdapter({ id: "claude", label: "Claude 网页", officialUrl: "https://claude.ai/", allowedHosts: ["claude.ai"] })],
 ]);
-
 const store = createChromeConversationStore();
 const promptInput = document.querySelector("#prompt");
-const copyButton = document.querySelector("#copy-prompt");
+const askButton = document.querySelector("#ask-all");
 const clearButton = document.querySelector("#clear-history");
 const errorElement = document.querySelector("#form-error");
 const resultsElement = document.querySelector("#results");
@@ -27,6 +18,12 @@ const resultTemplate = document.querySelector("#result-template");
 function setPromptError(message = "") {
   errorElement.textContent = message;
   errorElement.hidden = !message;
+}
+
+function setProviderProgress(providerId, text, status = "idle") {
+  const item = document.querySelector(`[data-progress-provider="${providerId}"]`);
+  item.querySelector("strong").textContent = text;
+  item.dataset.status = status;
 }
 
 function renderRecord(record) {
@@ -46,7 +43,7 @@ function renderRecord(record) {
   resultsElement.prepend(fragment);
 }
 
-async function copyPrompt() {
+async function askAll() {
   const prompt = promptInput.value;
   if (!prompt.trim()) {
     setPromptError("请先输入问题。");
@@ -54,13 +51,35 @@ async function copyPrompt() {
     return;
   }
 
+  setPromptError("");
+  askButton.disabled = true;
+  askButton.textContent = "两个 Agent 正在回答…";
+  for (const providerId of ["codex", "claude"]) setProviderProgress(providerId, "正在连接", "running");
+
   try {
-    await navigator.clipboard.writeText(prompt);
-    setPromptError("");
-    copyButton.textContent = "已复制，可到官网粘贴";
-    setTimeout(() => { copyButton.textContent = "复制问题"; }, 1800);
-  } catch {
-    setPromptError("复制失败，请选中文字后按 Command + C。");
+    const results = await askNativeCompanion(prompt, {
+      onStarted(providerIds) {
+        for (const providerId of providerIds) setProviderProgress(providerId, "正在回答", "running");
+      },
+    });
+
+    for (const result of results) {
+      if (result.status === "completed") {
+        const record = createNativeAgentResponse({ ...result, promptText: prompt });
+        await store.append(record);
+        renderRecord(record);
+        setProviderProgress(result.providerId, "回答已保存", "completed");
+      } else {
+        setProviderProgress(result.providerId, result.error ?? "回答失败", "failed");
+      }
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    setPromptError(`${message} 请确认本地 Companion 已安装。`);
+    for (const providerId of ["codex", "claude"]) setProviderProgress(providerId, "连接失败", "failed");
+  } finally {
+    askButton.disabled = false;
+    askButton.textContent = "同时询问 Codex + Claude";
   }
 }
 
@@ -70,13 +89,8 @@ async function saveManualResponse(providerId) {
   const responseInput = card.querySelector(".response-input");
   const sourceInput = card.querySelector(".source-input");
   const status = card.querySelector(".save-status");
-
   try {
-    const response = adapter.createResponse({
-      promptText: promptInput.value,
-      rawText: responseInput.value,
-      sourceUrl: sourceInput.value,
-    });
+    const response = adapter.createResponse({ promptText: promptInput.value, rawText: responseInput.value, sourceUrl: sourceInput.value });
     await store.append(response);
     renderRecord(response);
     responseInput.value = "";
@@ -89,12 +103,8 @@ async function saveManualResponse(providerId) {
   }
 }
 
-async function loadHistory() {
-  const records = await store.list();
-  for (const record of records) renderRecord(record);
-}
-
-copyButton.addEventListener("click", copyPrompt);
+for (const record of await store.list()) renderRecord(record);
+askButton.addEventListener("click", askAll);
 for (const button of document.querySelectorAll(".save-response")) {
   button.addEventListener("click", () => saveManualResponse(button.dataset.providerId));
 }
@@ -103,5 +113,3 @@ clearButton.addEventListener("click", async () => {
   await store.clear();
   resultsElement.replaceChildren();
 });
-
-await loadHistory();

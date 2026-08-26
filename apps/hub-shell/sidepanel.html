@@ -9,60 +9,51 @@
   <body>
     <main class="app-shell">
       <header class="hero">
-        <p class="eyebrow">LOCAL · MANUAL RELAY</p>
+        <p class="eyebrow">LOCAL · SUBSCRIPTION FIRST</p>
         <h1>AI Chat Hub</h1>
-        <p class="subtitle">在官方页面亲自发送，再把原始回复保存到一个窗口。</p>
+        <p class="subtitle">在一个窗口提问，同时获得两个官方订阅 Agent 的原始回答。</p>
       </header>
 
       <section class="composer" aria-labelledby="composer-title">
         <div class="section-heading">
-          <h2 id="composer-title">第一步：复制问题</h2>
-          <span class="badge">零网站权限</span>
+          <h2 id="composer-title">直接提问</h2>
+          <span class="badge">凭据留在本机</span>
         </div>
         <label for="prompt">问题</label>
-        <textarea id="prompt" rows="5" placeholder="输入准备发送给两个官方平台的问题…"></textarea>
-        <button id="copy-prompt" type="button">复制问题</button>
+        <textarea id="prompt" rows="6" maxlength="50000" placeholder="输入要同时发给 Codex 和 Claude 的问题…"></textarea>
+        <button id="ask-all" type="button">同时询问 Codex + Claude</button>
         <p id="form-error" class="form-error" role="alert" hidden></p>
+
+        <div class="provider-progress" aria-live="polite">
+          <div class="progress-item" data-progress-provider="codex">
+            <span>Codex（ChatGPT 订阅）</span><strong>等待提问</strong>
+          </div>
+          <div class="progress-item" data-progress-provider="claude">
+            <span>Claude Agent（Claude 订阅）</span><strong>等待提问</strong>
+          </div>
+        </div>
       </section>
 
-      <section aria-labelledby="relay-title">
-        <div class="section-heading">
-          <h2 id="relay-title">第二步：官方发送并保存原文</h2>
-        </div>
+      <details class="manual-fallback">
+        <summary>Companion 不可用时，使用手动保真转接</summary>
+        <p>在官网亲自发送问题，再把完整回复原样粘贴回来。</p>
         <div class="relay-grid">
           <article class="relay-card" data-provider="chatgpt">
-            <header>
-              <div>
-                <p class="provider-name">ChatGPT</p>
-                <p class="provider-help">在官方页面发送，然后复制完整回复。</p>
-              </div>
-              <a class="official-link" href="https://chatgpt.com/" target="_blank" rel="noreferrer">打开官网</a>
-            </header>
-            <label for="response-chatgpt">粘贴 ChatGPT 原始回复</label>
-            <textarea id="response-chatgpt" class="response-input" rows="7" placeholder="在这里按 Command + V…"></textarea>
-            <label for="source-chatgpt">官方会话链接（可选）</label>
-            <input id="source-chatgpt" class="source-input" type="url" placeholder="https://chatgpt.com/…" />
-            <button class="save-response" type="button" data-provider-id="chatgpt">保存 ChatGPT 原文</button>
+            <header><p class="provider-name">ChatGPT 网页</p><a class="official-link" href="https://chatgpt.com/" target="_blank" rel="noreferrer">打开官网</a></header>
+            <textarea class="response-input" rows="6" aria-label="粘贴 ChatGPT 原始回复" placeholder="粘贴 ChatGPT 原始回复…"></textarea>
+            <input class="source-input" type="url" aria-label="ChatGPT 官方会话链接" placeholder="官方会话链接（可选）" />
+            <button class="save-response" type="button" data-provider-id="chatgpt">保存原文</button>
             <p class="save-status" role="status"></p>
           </article>
-
           <article class="relay-card" data-provider="claude">
-            <header>
-              <div>
-                <p class="provider-name">Claude</p>
-                <p class="provider-help">在官方页面发送，然后复制完整回复。</p>
-              </div>
-              <a class="official-link" href="https://claude.ai/" target="_blank" rel="noreferrer">打开官网</a>
-            </header>
-            <label for="response-claude">粘贴 Claude 原始回复</label>
-            <textarea id="response-claude" class="response-input" rows="7" placeholder="在这里按 Command + V…"></textarea>
-            <label for="source-claude">官方会话链接（可选）</label>
-            <input id="source-claude" class="source-input" type="url" placeholder="https://claude.ai/…" />
-            <button class="save-response" type="button" data-provider-id="claude">保存 Claude 原文</button>
+            <header><p class="provider-name">Claude 网页</p><a class="official-link" href="https://claude.ai/" target="_blank" rel="noreferrer">打开官网</a></header>
+            <textarea class="response-input" rows="6" aria-label="粘贴 Claude 原始回复" placeholder="粘贴 Claude 原始回复…"></textarea>
+            <input class="source-input" type="url" aria-label="Claude 官方会话链接" placeholder="官方会话链接（可选）" />
+            <button class="save-response" type="button" data-provider-id="claude">保存原文</button>
             <p class="save-status" role="status"></p>
           </article>
         </div>
-      </section>
+      </details>
 
       <section aria-labelledby="results-title">
         <div class="section-heading">
@@ -75,17 +66,8 @@
 
     <template id="result-template">
       <article class="result-card">
-        <header>
-          <div>
-            <p class="provider-name"></p>
-            <p class="timestamp"></p>
-          </div>
-          <span class="status"></span>
-        </header>
-        <details class="prompt-details">
-          <summary>查看对应问题</summary>
-          <pre class="prompt-text"></pre>
-        </details>
+        <header><div><p class="provider-name"></p><p class="timestamp"></p></div><span class="status"></span></header>
+        <details class="prompt-details"><summary>查看对应问题</summary><pre class="prompt-text"></pre></details>
         <pre class="response-text"></pre>
         <a class="source-link" target="_blank" rel="noreferrer" hidden>打开官方会话</a>
       </article>
