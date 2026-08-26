@@ -25,7 +25,7 @@ tests/acceptance/             保真、隔离、恢复与失败测试
 
 ## 当前状态
 
-已建立零第三方依赖的 Chrome Manifest V3 侧边栏 PoC，当前只包含两个 Mock Provider，并且没有任何真实 AI 网站权限。真实平台适配器的下一决策门是选择首批两个官方平台并核对当前条款与浏览器自动化边界。
+已建立零第三方依赖的 Chrome Manifest V3 侧边栏 PoC。当前采用 ChatGPT + Claude 手动辅助转接：用户亲自在官方页面发送并复制回复，Hub 只保存用户明确粘贴的原文。扩展没有任何真实 AI 网站权限，也不读取账号或 Cookie。
 
 ## 本地验证
 

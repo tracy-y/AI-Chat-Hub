@@ -1,6 +1,6 @@
 # ADR 0003: Real provider access gate
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-08-26
 
 ## Context
@@ -36,3 +36,7 @@ Keep Mock and manual workflows until providers publish a suitable interface or g
 ## Recommendation
 
 Implement Option A as the next MVP slice, keep Option B outside the default path, and continue monitoring for Option C. Do not implement consumer-site automation based only on DOM selectors.
+
+## Owner decision
+
+Accepted on 2026-08-26. The default path is assisted manual relay. No real-provider host permissions or automated consumer-site access will be added under this decision.

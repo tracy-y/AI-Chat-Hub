@@ -1,104 +1,92 @@
-import { createMockAdapter } from "./adapters/mock-adapter.js";
-import {
-  createProviderRun,
-  ProviderRunStatus,
-  transitionProviderRun,
-} from "./core/provider-run.js";
+import { createManualRelayAdapter } from "./adapters/manual-relay-adapter.js";
 import { createChromeConversationStore } from "./storage/conversation-store.js";
 
 const adapters = new Map([
-  ["mock-a", createMockAdapter({
-    id: "mock-a",
-    label: "Mock Atlas",
-    responseFactory: (prompt) => `Atlas 保留原文：\n\n${prompt}`,
+  ["chatgpt", createManualRelayAdapter({
+    id: "chatgpt",
+    label: "ChatGPT",
+    officialUrl: "https://chatgpt.com/",
+    allowedHosts: ["chatgpt.com"],
   })],
-  ["mock-b", createMockAdapter({
-    id: "mock-b",
-    label: "Mock Beacon",
-    responseFactory: (prompt) => `Beacon 保留原文：\n\n${prompt}`,
+  ["claude", createManualRelayAdapter({
+    id: "claude",
+    label: "Claude",
+    officialUrl: "https://claude.ai/",
+    allowedHosts: ["claude.ai"],
   })],
 ]);
 
 const store = createChromeConversationStore();
 const promptInput = document.querySelector("#prompt");
-const submitButton = document.querySelector("#submit");
+const copyButton = document.querySelector("#copy-prompt");
 const clearButton = document.querySelector("#clear-history");
 const errorElement = document.querySelector("#form-error");
 const resultsElement = document.querySelector("#results");
 const resultTemplate = document.querySelector("#result-template");
 
-function selectedProviderIds() {
-  return [...document.querySelectorAll('input[name="provider"]:checked')].map(
-    (input) => input.value,
-  );
+function setPromptError(message = "") {
+  errorElement.textContent = message;
+  errorElement.hidden = !message;
 }
 
 function renderRecord(record) {
   const fragment = resultTemplate.content.cloneNode(true);
   fragment.querySelector(".provider-name").textContent = record.providerLabel;
   fragment.querySelector(".timestamp").textContent = new Date(record.capturedAt).toLocaleString();
+  fragment.querySelector(".prompt-text").textContent = record.promptText ?? "未记录";
   fragment.querySelector(".response-text").textContent = record.rawText;
+  const sourceLink = fragment.querySelector(".source-link");
+  if (record.sourceUrl) {
+    sourceLink.href = record.sourceUrl;
+    sourceLink.hidden = false;
+  }
   const status = fragment.querySelector(".status");
-  status.textContent = "已完成";
+  status.textContent = "已保存";
   status.dataset.status = "completed";
   resultsElement.prepend(fragment);
 }
 
-function renderFailure(providerLabel, message) {
-  const fragment = resultTemplate.content.cloneNode(true);
-  fragment.querySelector(".provider-name").textContent = providerLabel;
-  fragment.querySelector(".timestamp").textContent = new Date().toLocaleString();
-  fragment.querySelector(".response-text").textContent = message;
-  const status = fragment.querySelector(".status");
-  status.textContent = "失败";
-  status.dataset.status = "failed";
-  resultsElement.prepend(fragment);
-}
-
-async function submitToProvider(adapter, prompt) {
-  let run = createProviderRun({
-    id: crypto.randomUUID(),
-    providerId: adapter.id,
-    prompt,
-  });
-
-  try {
-    run = transitionProviderRun(run, ProviderRunStatus.RUNNING);
-    const response = await adapter.submit({ prompt });
-    await store.append(response);
-    run = transitionProviderRun(run, ProviderRunStatus.COMPLETED, { response });
-    renderRecord(run.response);
-  } catch (error) {
-    run = transitionProviderRun(run, ProviderRunStatus.FAILED, {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    renderFailure(adapter.label, run.error);
-  }
-}
-
-async function handleSubmit() {
+async function copyPrompt() {
   const prompt = promptInput.value;
-  const providerIds = selectedProviderIds();
-
-  errorElement.hidden = true;
   if (!prompt.trim()) {
-    errorElement.textContent = "请先输入问题。";
-    errorElement.hidden = false;
+    setPromptError("请先输入问题。");
     promptInput.focus();
     return;
   }
 
-  if (providerIds.length === 0) {
-    errorElement.textContent = "请至少选择一个平台。";
-    errorElement.hidden = false;
-    return;
+  try {
+    await navigator.clipboard.writeText(prompt);
+    setPromptError("");
+    copyButton.textContent = "已复制，可到官网粘贴";
+    setTimeout(() => { copyButton.textContent = "复制问题"; }, 1800);
+  } catch {
+    setPromptError("复制失败，请选中文字后按 Command + C。");
   }
+}
 
-  submitButton.disabled = true;
-  submitButton.textContent = "正在分别发送…";
-  await Promise.all(providerIds.map((providerId) => submitToProvider(adapters.get(providerId), prompt)));
-  submitButton.disabled = false;
-  submitButton.textContent = "分别发送";
+async function saveManualResponse(providerId) {
+  const adapter = adapters.get(providerId);
+  const card = document.querySelector(`[data-provider="${providerId}"]`);
+  const responseInput = card.querySelector(".response-input");
+  const sourceInput = card.querySelector(".source-input");
+  const status = card.querySelector(".save-status");
+
+  try {
+    const response = adapter.createResponse({
+      promptText: promptInput.value,
+      rawText: responseInput.value,
+      sourceUrl: sourceInput.value,
+    });
+    await store.append(response);
+    renderRecord(response);
+    responseInput.value = "";
+    sourceInput.value = "";
+    status.textContent = "原文已保存到本机。";
+    status.dataset.status = "saved";
+  } catch (error) {
+    status.textContent = error instanceof Error ? error.message : String(error);
+    status.dataset.status = "failed";
+  }
 }
 
 async function loadHistory() {
@@ -106,8 +94,12 @@ async function loadHistory() {
   for (const record of records) renderRecord(record);
 }
 
-submitButton.addEventListener("click", handleSubmit);
+copyButton.addEventListener("click", copyPrompt);
+for (const button of document.querySelectorAll(".save-response")) {
+  button.addEventListener("click", () => saveManualResponse(button.dataset.providerId));
+}
 clearButton.addEventListener("click", async () => {
+  if (!confirm("确定删除 AI Chat Hub 在此浏览器中保存的全部历史吗？")) return;
   await store.clear();
   resultsElement.replaceChildren();
 });

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AI Chat Hub PoC",
   "version": "0.1.0",
-  "description": "Local-first multi-provider workspace using mock providers only.",
+  "description": "Local-first manual relay for preserving responses from official AI websites.",
   "minimum_chrome_version": "114",
   "permissions": ["sidePanel", "storage"],
   "background": {
