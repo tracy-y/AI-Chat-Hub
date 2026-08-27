@@ -95,7 +95,7 @@ export async function readApiProviderSettings(providerId, options = {}) {
   const all = await readRawSettings(options);
   const saved = all[providerId] ?? {};
   const enabled = saved.enabled === true;
-  const region = providerId === "qwen" && REGIONS.has(saved.region) ? saved.region : "international";
+  const region = providerId === "qwen" && REGIONS.has(saved.region) ? saved.region : "china";
   const keyConfigured = await hasApiKey(providerId, options);
   return Object.freeze({ providerId, enabled, region, keyConfigured });
 }
@@ -104,7 +104,7 @@ export async function readAllApiProviderSettings(options = {}) {
   return Promise.all(API_PROVIDER_IDS.map((providerId) => readApiProviderSettings(providerId, options)));
 }
 
-export async function writeApiProviderSettings(providerId, { enabled, region = "international", apiKey = "" }, options = {}) {
+export async function writeApiProviderSettings(providerId, { enabled, region = "china", apiKey = "" }, options = {}) {
   assertProviderId(providerId);
   if (typeof enabled !== "boolean") throw new TypeError("API enabled state must be boolean");
   if (providerId === "qwen" && !REGIONS.has(region)) throw new TypeError("Invalid Qwen API region");

@@ -19,6 +19,7 @@ AI Chat Hub 是一个 Mac 本地 Chrome 侧边栏 PoC。所有消息出现在同
 - 每个 Agent 还有独立且默认留空的专属 Instruction，保存在 `instructions/providers/<agent>.md`；模型选择保存在私有的 `settings/providers.json`。只有被点名的 Agent 会收到自己的专属说明，用户可随时修改或清空。
 - 聊天框可添加最多 5 个本地文本附件（文本、Markdown、代码、JSON、CSV 等）。正文只在当前发送过程中交给被选中的 Agent；聊天记录只保存文件名、类型和大小，不把文件正文写入 Git 或本地聊天数据库。单文件上限 1 MB / 20,000 字符，合计上限 35,000 字符。
 - Qwen 和 DeepSeek 的“可选 API 模式”默认关闭。启用状态与区域保存在本机私有设置文件，API Key 通过无命令行明文参数的方式写入 macOS Keychain；Native Companion 只向扩展返回“是否已配置”，绝不返回 Key 内容。
+- 本机当前将 Qwen 默认区域设为中国区 Coding Plan；如其他用户使用国际区账号，可在扩展中独立切换。
 
 ## 本机运行
 

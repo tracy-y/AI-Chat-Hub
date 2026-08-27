@@ -91,7 +91,7 @@ test("Grok uses a private prompt file with tools disabled and preserves stdout",
   assert.equal(result.rawText, "Grok 原始回答\n");
 });
 
-test("Qwen optional API uses the international Coding Plan endpoint and preserves content", async () => {
+test("Qwen optional API defaults to the China Coding Plan endpoint and preserves content", async () => {
   let call;
   const result = await askQwen("Qwen prompt", {
     apiKey: "sk-local",
@@ -100,7 +100,7 @@ test("Qwen optional API uses the international Coding Plan endpoint and preserve
       return { ok: true, status: 200, text: async () => JSON.stringify({ choices: [{ message: { content: "Qwen 原始 API 回答" } }] }) };
     },
   });
-  assert.equal(call.url, "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions");
+  assert.equal(call.url, "https://coding.dashscope.aliyuncs.com/v1/chat/completions");
   assert.equal(call.options.headers.Authorization, "Bearer sk-local");
   assert.deepEqual(JSON.parse(call.options.body).messages, [{ role: "user", content: "Qwen prompt" }]);
   assert.equal(result.rawText, "Qwen 原始 API 回答");

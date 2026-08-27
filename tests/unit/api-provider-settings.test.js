@@ -29,7 +29,7 @@ test("optional API providers default to disabled and do not expose a key", async
   const mock = keychainMock();
   try {
     assert.deepEqual(await readApiProviderSettings("qwen", { root, run: mock.run }), {
-      providerId: "qwen", enabled: false, region: "international", keyConfigured: false,
+      providerId: "qwen", enabled: false, region: "china", keyConfigured: false,
     });
   } finally {
     await rm(root, { recursive: true, force: true });

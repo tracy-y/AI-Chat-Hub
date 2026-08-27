@@ -208,7 +208,7 @@ export async function askGrok(prompt, options = {}) {
 }
 
 export async function askQwen(prompt, options = {}) {
-  const region = options.region === "china" ? "china" : "international";
+  const region = options.region === "international" ? "international" : "china";
   const baseUrl = region === "china"
     ? "https://coding.dashscope.aliyuncs.com/v1"
     : "https://coding-intl.dashscope.aliyuncs.com/v1";
