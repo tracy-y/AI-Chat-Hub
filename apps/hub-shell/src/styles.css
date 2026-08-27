@@ -124,8 +124,8 @@ button { cursor: pointer; }
 .session-copy strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .session-copy small { overflow: hidden; margin-top: 3px; color: #7a8781; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 
-.manual-fallback, .instruction-panel { border: 1px solid rgb(24 33 29 / 10%); border-radius: 14px; padding: 11px 13px; background: rgb(255 255 255 / 55%); }
-.manual-fallback > summary, .instruction-panel > summary { color: #587067; font-size: 11px; font-weight: 800; cursor: pointer; }
+.manual-fallback, .instruction-panel, .agent-settings-panel { border: 1px solid rgb(24 33 29 / 10%); border-radius: 14px; padding: 11px 13px; background: rgb(255 255 255 / 55%); }
+.manual-fallback > summary, .instruction-panel > summary, .agent-settings-panel > summary { color: #587067; font-size: 11px; font-weight: 800; cursor: pointer; }
 .manual-fallback > p { color: #6d7772; font-size: 11px; }
 .instruction-help { color: #6d7772; font-size: 10px; line-height: 1.55; }
 .instruction-panel > label { display: block; margin: 10px 0 5px; color: #4d6259; font-size: 10px; font-weight: 800; }
@@ -134,6 +134,19 @@ button { cursor: pointer; }
 #instruction-count { color: #7a8781; font-size: 9px; }
 #save-instructions { border: 0; border-radius: 9px; padding: 8px 10px; background: #365f51; color: #fff; font-size: 10px; font-weight: 800; }
 #save-instructions:disabled { cursor: wait; opacity: 0.55; }
+.agent-settings-list { display: grid; gap: 10px; margin-top: 10px; }
+.agent-setting-card { display: grid; gap: 9px; border: 1px solid #d9dedb; border-radius: 12px; padding: 11px; background: #fff; }
+.agent-setting-card header { display: flex; align-items: center; gap: 8px; }
+.agent-setting-card header > div:last-child { display: grid; min-width: 0; }
+.agent-setting-card header strong { font-size: 11px; }
+.agent-setting-card header small { margin-top: 2px; color: #7a8781; font-size: 9px; }
+.agent-setting-avatar { display: grid; flex: 0 0 auto; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: #e5ece8; color: #315c4d; font-size: 10px; font-weight: 900; }
+.agent-setting-card label { display: grid; gap: 5px; color: #4d6259; font-size: 10px; font-weight: 800; }
+.agent-model-select, .agent-custom-model, .agent-instruction { width: 100%; min-width: 0; border: 1px solid #c8cec9; border-radius: 9px; padding: 8px; background: #fff; color: #18211d; }
+.agent-instruction { resize: vertical; font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.save-agent-setting { border: 0; border-radius: 9px; padding: 8px 10px; background: #365f51; color: #fff; font-size: 10px; font-weight: 800; }
+.save-agent-setting:disabled { cursor: wait; opacity: 0.55; }
+.agent-instruction-count { color: #7a8781; font-size: 9px; }
 .relay-grid { display: grid; gap: 10px; margin-top: 10px; }
 .relay-card { display: grid; gap: 8px; border-top: 1px solid #d9dedb; padding-top: 10px; }
 .relay-card header { display: flex; align-items: center; justify-content: space-between; }
@@ -151,9 +164,9 @@ button { cursor: pointer; }
 
 @media (prefers-color-scheme: dark) {
   :root, body { background: #121815; color: #edf3ef; }
-  .chat-shell, .manual-fallback, .instruction-panel, .conversation-history { border-color: rgb(255 255 255 / 12%); background: #19211d; }
+  .chat-shell, .manual-fallback, .instruction-panel, .agent-settings-panel, .conversation-history { border-color: rgb(255 255 255 / 12%); background: #19211d; }
   .empty-state h2 { color: #eef4f0; }
-  .text-button, .message-body, #prompt, #context-mode, #user-instructions, .response-input, .source-input { border-color: #46544d; background: #202b26; color: #edf3ef; }
+  .text-button, .message-body, #prompt, #context-mode, #user-instructions, .response-input, .source-input, .agent-setting-card, .agent-model-select, .agent-custom-model, .agent-instruction { border-color: #46544d; background: #202b26; color: #edf3ef; }
   .composer { border-color: #36433d; background: #17201c; }
   .agent-avatar { background: #293d35; color: #9dd5bf; }
   .mention-picker { border-color: #46544d; background: #202b26; }

@@ -4,6 +4,7 @@ import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import {
+  addProviderInstructionsToPrompt,
   addUserInstructionsToPrompt,
   DEFAULT_INSTRUCTION_TEMPLATE,
   getInstructionPath,
@@ -35,6 +36,14 @@ test("saved instructions are added before the conversation prompt", () => {
 test("empty or untouched template instructions do not change the prompt", () => {
   assert.equal(addUserInstructionsToPrompt("question", ""), "question");
   assert.equal(addUserInstructionsToPrompt("question", DEFAULT_INSTRUCTION_TEMPLATE), "question");
+});
+
+test("provider instruction is added only for the selected agent prompt", () => {
+  const prompt = addProviderInstructionsToPrompt("shared prompt", "语气直接", "Grok");
+  assert.match(prompt, /Grok 专属说明开始/);
+  assert.match(prompt, /语气直接/);
+  assert.match(prompt, /shared prompt/);
+  assert.equal(addProviderInstructionsToPrompt("shared prompt", "", "Grok"), "shared prompt");
 });
 
 test("instruction length limit is enforced before writing", async () => {

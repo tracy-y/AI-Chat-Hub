@@ -1,6 +1,6 @@
 {
   "name": "official-ai-chat-hub",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "Local-first, subscription-first multi-platform AI conversation hub.",

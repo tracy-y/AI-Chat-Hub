@@ -1,7 +1,21 @@
 #!/usr/bin/env node
 import { askSelectedProviders, listProviderAvailability, PROVIDER_IDS } from "./src/providers.mjs";
 import { createNativeMessageDecoder, encodeNativeMessage } from "./src/native-messaging.mjs";
-import { addUserInstructionsToPrompt, MAX_INSTRUCTION_CHARACTERS, readUserInstructions, writeUserInstructions } from "./src/user-instructions.mjs";
+import {
+  CONFIGURABLE_PROVIDER_IDS,
+  MAX_MODEL_ID_CHARACTERS,
+  MAX_PROVIDER_INSTRUCTION_CHARACTERS,
+  readAllProviderSettings,
+  readProviderSettings,
+  writeProviderSettings,
+} from "./src/provider-settings.mjs";
+import {
+  addProviderInstructionsToPrompt,
+  addUserInstructionsToPrompt,
+  MAX_INSTRUCTION_CHARACTERS,
+  readUserInstructions,
+  writeUserInstructions,
+} from "./src/user-instructions.mjs";
 
 const MAX_PROMPT_CHARACTERS = 100_000;
 let queue = Promise.resolve();
@@ -27,6 +41,33 @@ async function handleMessage(message) {
   if (message?.type === "providers:list") {
     const providers = await listProviderAvailability();
     send({ id, type: "providers", providers });
+    return;
+  }
+
+  if (message?.type === "provider-settings:get") {
+    const settings = await readAllProviderSettings();
+    send({
+      id,
+      type: "providerSettings",
+      settings,
+      maxInstructionCharacters: MAX_PROVIDER_INSTRUCTION_CHARACTERS,
+      maxModelCharacters: MAX_MODEL_ID_CHARACTERS,
+    });
+    return;
+  }
+
+  if (message?.type === "provider-settings:set") {
+    if (!CONFIGURABLE_PROVIDER_IDS.includes(message.providerId)
+      || typeof message.model !== "string"
+      || typeof message.instruction !== "string") {
+      send({ id, type: "error", error: "Invalid provider settings" });
+      return;
+    }
+    const settings = await writeProviderSettings(message.providerId, {
+      model: message.model,
+      instruction: message.instruction,
+    });
+    send({ id, type: "providerSettingsSaved", settings });
     return;
   }
 
@@ -68,8 +109,16 @@ async function handleMessage(message) {
 
   send({ id, type: "started", providers });
   const instructions = await readUserInstructions();
-  const providerPrompt = addUserInstructionsToPrompt(message.prompt, instructions);
-  const results = await askSelectedProviders(providerPrompt, providers);
+  const sharedPrompt = addUserInstructionsToPrompt(message.prompt, instructions);
+  const labels = new Map(availability.map((provider) => [provider.id, provider.label]));
+  const providerOptions = Object.fromEntries(await Promise.all(providers.map(async (providerId) => {
+    const settings = await readProviderSettings(providerId);
+    return [providerId, {
+      model: settings.model,
+      prompt: addProviderInstructionsToPrompt(sharedPrompt, settings.instruction, labels.get(providerId) ?? providerId),
+    }];
+  })));
+  const results = await askSelectedProviders(sharedPrompt, providers, providerOptions);
   send({ id, type: "chatResult", results });
 }
 

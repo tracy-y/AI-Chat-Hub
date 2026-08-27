@@ -19,6 +19,19 @@ test("Codex receives the exact prompt through stdin with fixed safe arguments", 
   assert.equal(result.rawText, "answer\n");
 });
 
+test("provider model selections are passed as fixed command arguments", async () => {
+  const calls = [];
+  await askCodex("prompt", {
+    command: "/fixed/codex",
+    model: "gpt-test",
+    run: async (call) => {
+      calls.push(call);
+      return { code: 0, signal: null, stdout: "answer", stderr: "" };
+    },
+  });
+  assert.deepEqual(calls[0].args.slice(0, 3), ["exec", "--model", "gpt-test"]);
+});
+
 test("Claude receives the exact prompt with tools and persistence disabled", async () => {
   const calls = [];
   const result = await askClaude("exact prompt", {
@@ -105,6 +118,22 @@ test("selected provider execution does not call unmentioned agents", async () =>
 
   assert.equal(claudeCalls, 1);
   assert.deepEqual(results.map((result) => result.providerId), ["claude"]);
+});
+
+test("selected providers can receive distinct prompts and models", async () => {
+  const calls = [];
+  await askSelectedProviders("shared", ["claude"], {
+    claude: {
+      prompt: "claude-only",
+      model: "sonnet",
+      run: async (call) => {
+        calls.push(call);
+        return { code: 0, signal: null, stdout: JSON.stringify({ result: "answer" }), stderr: "" };
+      },
+    },
+  });
+  assert.equal(calls[0].input, "claude-only");
+  assert.ok(calls[0].args.includes("sonnet"));
 });
 
 test("selected provider execution rejects unknown provider IDs", async () => {

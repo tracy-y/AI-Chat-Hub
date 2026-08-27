@@ -89,6 +89,13 @@
         <p id="instruction-status" class="save-status" role="status"></p>
       </details>
 
+      <details class="agent-settings-panel">
+        <summary>Agent 设置 · 模型和专属 Instruction</summary>
+        <p class="instruction-help">每个 Agent 的内容互相独立，默认留空。只有向该 Agent 提问时才会发送它的专属 Instruction；所有设置仅保存在这台 Mac。</p>
+        <div id="agent-settings-list" class="agent-settings-list"></div>
+        <p id="agent-settings-status" class="save-status" role="status"></p>
+      </details>
+
       <details class="manual-fallback">
         <summary>本地 Companion 不可用？手动保存网页原文</summary>
         <p>手动回复会关联到最近一条用户消息。</p>
@@ -136,6 +143,29 @@
           <span class="session-copy"><strong></strong><small></small></span>
         </button>
         <button class="session-delete" type="button" aria-label="删除对话" title="删除这条本地对话">删除</button>
+      </article>
+    </template>
+
+    <template id="agent-settings-template">
+      <article class="agent-setting-card">
+        <header>
+          <div class="agent-setting-avatar"></div>
+          <div><strong class="agent-setting-name"></strong><small class="agent-setting-state"></small></div>
+        </header>
+        <label>模型
+          <select class="agent-model-select"></select>
+        </label>
+        <label class="custom-model-label" hidden>自定义模型 ID
+          <input class="agent-custom-model" type="text" autocomplete="off" spellcheck="false" />
+        </label>
+        <label>专属 Instruction（按需填写）
+          <textarea class="agent-instruction" rows="5" placeholder="例如：请采用怎样的角色、语气、结构或关注重点…"></textarea>
+        </label>
+        <div class="instruction-footer">
+          <span class="agent-instruction-count"></span>
+          <button class="save-agent-setting" type="button">保存</button>
+        </div>
+        <p class="save-status agent-save-status" role="status"></p>
       </article>
     </template>
 

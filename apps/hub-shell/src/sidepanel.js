@@ -4,7 +4,14 @@ import { buildProviderPrompt } from "./core/conversation-context.js";
 import { applyMentionSelection, findMentionQuery } from "./core/mention-autocomplete.js";
 import { parseMentionRouting } from "./core/mention-routing.js";
 import { createUserMessage } from "./core/user-message.js";
-import { askNativeCompanion, getNativeInstructions, getNativeProviders, saveNativeInstructions } from "./native-client.js";
+import {
+  askNativeCompanion,
+  getNativeInstructions,
+  getNativeProviders,
+  getNativeProviderSettings,
+  saveNativeInstructions,
+  saveNativeProviderSettings,
+} from "./native-client.js";
 import { createChromeChatSessionStore } from "./storage/chat-session-store.js";
 
 const PROVIDER_LABELS = Object.freeze({
@@ -12,9 +19,29 @@ const PROVIDER_LABELS = Object.freeze({
   claude: "Claude Agent（Claude 订阅）",
   gemini: "Gemini via Antigravity（Google 订阅）",
   grok: "Grok Build（xAI 账号）",
+  qwen: "Qwen 网页（待接入）",
+  deepseek: "DeepSeek 网页（待接入）",
 });
-const PROVIDER_SHORT_LABELS = Object.freeze({ codex: "Codex", claude: "Claude", gemini: "Gemini", grok: "Grok" });
-const PROVIDER_AVATARS = Object.freeze({ codex: "G", claude: "C", gemini: "M", grok: "X" });
+const PROVIDER_SHORT_LABELS = Object.freeze({ codex: "Codex", claude: "Claude", gemini: "Gemini", grok: "Grok", qwen: "Qwen", deepseek: "DeepSeek" });
+const PROVIDER_AVATARS = Object.freeze({ codex: "G", claude: "C", gemini: "M", grok: "X", qwen: "Q", deepseek: "D" });
+const CUSTOM_MODEL_VALUE = "__custom__";
+const PROVIDER_SETTING_ORDER = Object.freeze(["codex", "claude", "gemini", "grok", "qwen", "deepseek"]);
+const PROVIDER_MODEL_CHOICES = Object.freeze({
+  codex: [{ value: "", label: "官方默认" }],
+  claude: [
+    { value: "", label: "官方默认" },
+    { value: "sonnet", label: "Sonnet" },
+    { value: "opus", label: "Opus" },
+  ],
+  gemini: [
+    { value: "gemini-3.7-flash-medium", label: "Gemini 3.7 Flash · Medium（已验证）" },
+    { value: "gemini-3.7-flash-high", label: "Gemini 3.7 Flash · High" },
+    { value: "gemini-3.7-flash-low", label: "Gemini 3.7 Flash · Low" },
+  ],
+  grok: [{ value: "", label: "官方默认" }],
+  qwen: [{ value: "", label: "官网当前模型" }],
+  deepseek: [{ value: "", label: "官网当前模型" }],
+});
 const adapters = new Map([
   ["chatgpt", createManualRelayAdapter({ id: "chatgpt", label: "ChatGPT 网页", officialUrl: "https://chatgpt.com/", allowedHosts: ["chatgpt.com"] })],
   ["claude", createManualRelayAdapter({ id: "claude", label: "Claude 网页", officialUrl: "https://claude.ai/", allowedHosts: ["claude.ai"] })],
@@ -39,6 +66,9 @@ const instructionInput = document.querySelector("#user-instructions");
 const instructionCount = document.querySelector("#instruction-count");
 const instructionStatus = document.querySelector("#instruction-status");
 const saveInstructionsButton = document.querySelector("#save-instructions");
+const agentSettingsList = document.querySelector("#agent-settings-list");
+const agentSettingsStatus = document.querySelector("#agent-settings-status");
+const agentSettingsTemplate = document.querySelector("#agent-settings-template");
 let sessionState = await store.load();
 let conversationRecords = getActiveSession().records;
 let activeMention = null;
@@ -46,6 +76,7 @@ let visiblePickerOptions = [];
 let activePickerIndex = 0;
 let requestRunning = false;
 let availableProviderIds = ["codex", "claude"];
+let nativeProviders = [];
 
 function getActiveSession() {
   return sessionState.sessions.find((session) => session.id === sessionState.activeSessionId);
@@ -80,6 +111,7 @@ async function loadInstructions() {
 async function loadProviders() {
   try {
     const providers = await getNativeProviders();
+    nativeProviders = providers;
     availableProviderIds = providers.filter((provider) => provider.available).map((provider) => provider.id);
     const installedCount = providers.filter((provider) => provider.installed).length;
     connectionStatus.textContent = `${availableProviderIds.length} 个 Agent 可用 · ${installedCount} 个已安装`;
@@ -96,6 +128,112 @@ async function loadProviders() {
   }
   const allDescription = mentionPicker.querySelector("[data-all-description]");
   if (allDescription) allDescription.textContent = `同时询问 ${availableProviderIds.length} 个可用 Agent`;
+}
+
+function providerStateLabel(providerId) {
+  const provider = nativeProviders.find((candidate) => candidate.id === providerId);
+  if (provider?.available) return "当前可用";
+  if (provider?.installed) return "已安装 · 需要登录";
+  if (["qwen", "deepseek"].includes(providerId)) return "官方网页 Bridge 待接入";
+  return "本机尚未安装";
+}
+
+function updateAgentInstructionCount(card) {
+  const input = card.querySelector(".agent-instruction");
+  card.querySelector(".agent-instruction-count").textContent = `${input.value.length} / ${input.maxLength}`;
+}
+
+function updateCustomModelVisibility(card) {
+  const isCustom = card.querySelector(".agent-model-select").value === CUSTOM_MODEL_VALUE;
+  card.querySelector(".custom-model-label").hidden = !isCustom;
+}
+
+function createAgentSettingCard(settings, limits) {
+  const fragment = agentSettingsTemplate.content.cloneNode(true);
+  const card = fragment.querySelector(".agent-setting-card");
+  const providerId = settings.providerId;
+  card.dataset.providerId = providerId;
+  card.querySelector(".agent-setting-avatar").textContent = PROVIDER_AVATARS[providerId] ?? "@";
+  card.querySelector(".agent-setting-name").textContent = PROVIDER_SHORT_LABELS[providerId] ?? providerId;
+  card.querySelector(".agent-setting-state").textContent = providerStateLabel(providerId);
+
+  const select = card.querySelector(".agent-model-select");
+  const choices = PROVIDER_MODEL_CHOICES[providerId] ?? [{ value: "", label: "官方默认" }];
+  for (const choice of [...choices, { value: CUSTOM_MODEL_VALUE, label: "自定义模型 ID…" }]) {
+    const option = document.createElement("option");
+    option.value = choice.value;
+    option.textContent = choice.label;
+    select.append(option);
+  }
+  const customModelInput = card.querySelector(".agent-custom-model");
+  customModelInput.maxLength = limits.maxModelCharacters;
+  if (choices.some((choice) => choice.value === settings.model)) {
+    select.value = settings.model;
+  } else if (settings.model) {
+    select.value = CUSTOM_MODEL_VALUE;
+    customModelInput.value = settings.model;
+  } else {
+    select.value = choices[0].value;
+  }
+
+  const instructionInputForAgent = card.querySelector(".agent-instruction");
+  instructionInputForAgent.maxLength = limits.maxInstructionCharacters;
+  instructionInputForAgent.value = settings.instruction;
+  select.addEventListener("change", () => updateCustomModelVisibility(card));
+  instructionInputForAgent.addEventListener("input", () => updateAgentInstructionCount(card));
+  card.querySelector(".save-agent-setting").addEventListener("click", () => saveAgentSetting(card));
+  updateCustomModelVisibility(card);
+  updateAgentInstructionCount(card);
+  return card;
+}
+
+async function loadAgentSettings() {
+  agentSettingsList.replaceChildren();
+  agentSettingsStatus.dataset.status = "";
+  agentSettingsStatus.textContent = "正在读取本机设置…";
+  try {
+    const result = await getNativeProviderSettings();
+    const byProvider = new Map(result.settings.map((settings) => [settings.providerId, settings]));
+    for (const providerId of PROVIDER_SETTING_ORDER) {
+      const settings = byProvider.get(providerId) ?? { providerId, model: "", instruction: "" };
+      agentSettingsList.append(createAgentSettingCard(settings, {
+        maxInstructionCharacters: result.maxInstructionCharacters ?? 10_000,
+        maxModelCharacters: result.maxModelCharacters ?? 120,
+      }));
+    }
+    agentSettingsStatus.textContent = "设置已从 Mac 本地载入。";
+  } catch (error) {
+    agentSettingsStatus.textContent = error instanceof Error ? error.message : String(error);
+    agentSettingsStatus.dataset.status = "failed";
+  }
+}
+
+async function saveAgentSetting(card) {
+  const providerId = card.dataset.providerId;
+  const select = card.querySelector(".agent-model-select");
+  const customModelInput = card.querySelector(".agent-custom-model");
+  const instructionInputForAgent = card.querySelector(".agent-instruction");
+  const saveButton = card.querySelector(".save-agent-setting");
+  const status = card.querySelector(".agent-save-status");
+  const model = select.value === CUSTOM_MODEL_VALUE ? customModelInput.value.trim() : select.value;
+  if (select.value === CUSTOM_MODEL_VALUE && !model) {
+    status.dataset.status = "failed";
+    status.textContent = "请输入模型 ID，或选择官方默认。";
+    customModelInput.focus();
+    return;
+  }
+  saveButton.disabled = true;
+  status.dataset.status = "";
+  status.textContent = "正在保存…";
+  try {
+    await saveNativeProviderSettings(providerId, model, instructionInputForAgent.value);
+    status.textContent = `已保存 ${PROVIDER_SHORT_LABELS[providerId] ?? providerId} 的本地设置。`;
+  } catch (error) {
+    status.textContent = error instanceof Error ? error.message : String(error);
+    status.dataset.status = "failed";
+  } finally {
+    saveButton.disabled = false;
+  }
 }
 
 async function saveInstructions() {
@@ -366,6 +504,7 @@ renderSessionList();
 syncActiveSessionControls();
 await loadProviders();
 await loadInstructions();
+await loadAgentSettings();
 sendButton.addEventListener("click", sendMessage);
 promptInput.addEventListener("keydown", (event) => {
   if (!mentionPicker.hidden) {

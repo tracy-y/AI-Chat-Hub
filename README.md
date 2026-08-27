@@ -16,6 +16,7 @@ AI Chat Hub 是一个 Mac 本地 Chrome 侧边栏 PoC。所有消息出现在同
 - 历史只保存在本机 `chrome.storage.local`；仓库不保存 Cookie、token、邮箱或私人对话。
 - 当前 Chrome 扩展不申请 AI 官方网站访问权限；Qwen/DeepSeek 网页模式落地时只会申请对应官方域名的最小权限。
 - 用户可在扩展中维护全局长期说明，单独保存在 `~/Library/Application Support/AI Chat Hub/instructions/README.md`（目录 `0700`、文件 `0600`），不进入 Git 或聊天数据库。提问时该内容会发送给被选中的官方 Agent，因此不得写入密码、Cookie、API key 或验证码。
+- 每个 Agent 还有独立且默认留空的专属 Instruction，保存在 `instructions/providers/<agent>.md`；模型选择保存在私有的 `settings/providers.json`。只有被点名的 Agent 会收到自己的专属说明，用户可随时修改或清空。
 
 ## 本机运行
 
@@ -36,6 +37,7 @@ npm run install:native-host
 - 发送后的用户气泡只显示问题正文；目标显示为“发送给 Codex/Claude”。
 - 每个会话可独立选择“简单 20 条 / 一般 50 条 / 深度 100 条”，新会话默认简单模式。
 - “用户 Instruction”用于保存希望所有 Agent 长期参考的稳定信息；最多 20,000 字符，保存采用原子替换，重新安装不会覆盖已有 README。
+- “Agent 设置”可分别选择模型并按需填写专属角色、语气、结构和关注重点；每个专属 Instruction 最多 10,000 字符，不填写时不会添加任何专属提示。
 - Enter 发送，Shift + Enter 换行。
 - “新对话”只创建新的空会话，不删除当前内容；已有会话保存在聊天窗口下面，可点击重新打开并继续。
 - 每条历史对话都有独立“删除”按钮；确认后只删除 Hub 的本地副本且无法撤销，不影响官方平台中的对话。

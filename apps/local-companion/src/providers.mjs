@@ -50,6 +50,10 @@ function parseStreamJsonAnswer(stdout, providerName) {
   return result.response;
 }
 
+function modelArguments(model) {
+  return model ? ["--model", model] : [];
+}
+
 export async function askCodex(prompt, options = {}) {
   const providerId = "codex";
   const providerLabel = "Codex（ChatGPT 订阅）";
@@ -58,6 +62,7 @@ export async function askCodex(prompt, options = {}) {
       command: options.command ?? process.env.AI_CHAT_HUB_CODEX_BIN ?? "codex",
       args: [
         "exec",
+        ...modelArguments(options.model),
         "--sandbox", "read-only",
         "--skip-git-repo-check",
         "--ephemeral",
@@ -86,6 +91,7 @@ export async function askClaude(prompt, options = {}) {
       command: options.command ?? process.env.AI_CHAT_HUB_CLAUDE_BIN ?? "claude",
       args: [
         "-p",
+        ...modelArguments(options.model),
         "--output-format", "json",
         "--tools", "",
         "--no-session-persistence",
@@ -120,7 +126,7 @@ export async function askGemini(prompt, options = {}) {
       args: [
         "--input-format", "stream-json",
         "--output-format", "stream-json",
-        "--model", options.model ?? process.env.AI_CHAT_HUB_GEMINI_MODEL ?? "gemini-3.7-flash-medium",
+        "--model", options.model || process.env.AI_CHAT_HUB_GEMINI_MODEL || "gemini-3.7-flash-medium",
         "--mode", "plan",
         "--sandbox",
         "--disable-slash-commands",
@@ -147,6 +153,7 @@ export async function askGrok(prompt, options = {}) {
         command: options.command ?? process.env.AI_CHAT_HUB_GROK_BIN ?? "grok",
         args: [
           "--prompt-file", promptPath,
+          ...modelArguments(options.model),
           "--output-format", "plain",
           "--permission-mode", "plan",
           "--tools", "",
@@ -216,6 +223,7 @@ export async function askSelectedProviders(prompt, providerIds, options = {}) {
   return Promise.all(providerIds.map((providerId) => {
     const ask = PROVIDERS[providerId];
     if (!ask) throw new TypeError(`Unsupported provider: ${providerId}`);
-    return ask(prompt, options[providerId]);
+    const providerOptions = options[providerId] ?? {};
+    return ask(providerOptions.prompt ?? prompt, providerOptions);
   }));
 }

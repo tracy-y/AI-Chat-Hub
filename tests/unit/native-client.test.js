@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { askNativeCompanion, getNativeInstructions, getNativeProviders, NATIVE_HOST_NAME, saveNativeInstructions } from "../../apps/hub-shell/src/native-client.js";
+import {
+  askNativeCompanion,
+  getNativeInstructions,
+  getNativeProviders,
+  getNativeProviderSettings,
+  NATIVE_HOST_NAME,
+  saveNativeInstructions,
+  saveNativeProviderSettings,
+} from "../../apps/hub-shell/src/native-client.js";
 
 function createEvent() {
   const listeners = [];
@@ -84,4 +92,33 @@ test("native client lists local provider availability without credential data", 
     onMessage.emit({ id: message.id, type: "providers", providers: [{ id: "gemini", available: true, installed: true }] });
   });
   assert.deepEqual(await getNativeProviders({ chromeApi }), [{ id: "gemini", available: true, installed: true }]);
+});
+
+test("native client reads and saves provider-specific local settings", async () => {
+  const posted = [];
+  const chromeApi = createInstructionChromeApi((message, onMessage) => {
+    posted.push(message);
+    if (message.type === "provider-settings:get") {
+      onMessage.emit({
+        id: message.id,
+        type: "providerSettings",
+        settings: [{ providerId: "gemini", model: "flash", instruction: "简洁" }],
+        maxInstructionCharacters: 10_000,
+        maxModelCharacters: 120,
+      });
+    } else {
+      onMessage.emit({ id: message.id, type: "providerSettingsSaved", settings: message });
+    }
+  });
+
+  const result = await getNativeProviderSettings({ chromeApi });
+  assert.equal(result.settings[0].instruction, "简洁");
+  await saveNativeProviderSettings("gemini", "flash", "简洁", { chromeApi });
+  assert.deepEqual(posted[1], {
+    id: posted[1].id,
+    type: "provider-settings:set",
+    providerId: "gemini",
+    model: "flash",
+    instruction: "简洁",
+  });
 });

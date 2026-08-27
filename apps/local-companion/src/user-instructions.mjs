@@ -59,3 +59,15 @@ export function addUserInstructionsToPrompt(prompt, instructions) {
     prompt,
   ].join("\n\n");
 }
+
+export function addProviderInstructionsToPrompt(prompt, instructions, providerLabel) {
+  if (!instructions.trim()) return prompt;
+  return [
+    `以下是用户专门为 ${providerLabel} 保存的回答偏好或角色要求。请在不违背当前请求的前提下参考它，不要复述这些说明，除非用户要求。`,
+    `--- ${providerLabel} 专属说明开始 ---`,
+    instructions,
+    `--- ${providerLabel} 专属说明结束 ---`,
+    "以下是全局用户说明及本次对话内容：",
+    prompt,
+  ].join("\n\n");
+}
