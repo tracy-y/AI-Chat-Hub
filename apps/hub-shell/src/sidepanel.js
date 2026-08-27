@@ -38,7 +38,10 @@ const PROVIDER_MODEL_CHOICES = Object.freeze({
     { value: "gemini-3.7-flash-high", label: "Gemini 3.7 Flash · High" },
     { value: "gemini-3.7-flash-low", label: "Gemini 3.7 Flash · Low" },
   ],
-  grok: [{ value: "", label: "官方默认" }],
+  grok: [
+    { value: "", label: "官方默认 · Grok 4.6（已验证）" },
+    { value: "grok-4.6", label: "Grok 4.6" },
+  ],
   qwen: [{ value: "", label: "官网当前模型" }],
   deepseek: [{ value: "", label: "官网当前模型" }],
 });
