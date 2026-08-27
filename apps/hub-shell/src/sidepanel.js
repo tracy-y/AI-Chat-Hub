@@ -3,6 +3,7 @@ import { createNativeAgentResponse } from "./adapters/native-agent-adapter.js";
 import { buildProviderPrompt } from "./core/conversation-context.js";
 import { applyMentionSelection, findMentionQuery } from "./core/mention-autocomplete.js";
 import { parseMentionRouting } from "./core/mention-routing.js";
+import { addTextAttachmentsToPrompt, attachmentMetadata, readTextAttachments } from "./core/text-attachments.js";
 import { createUserMessage } from "./core/user-message.js";
 import {
   askNativeCompanion,
@@ -54,6 +55,9 @@ const timeline = document.querySelector("#timeline");
 const emptyState = document.querySelector("#empty-state");
 const promptInput = document.querySelector("#prompt");
 const sendButton = document.querySelector("#send-message");
+const attachmentInput = document.querySelector("#attachment-input");
+const attachFilesButton = document.querySelector("#attach-files");
+const pendingAttachmentsElement = document.querySelector("#pending-attachments");
 const newChatButton = document.querySelector("#new-chat");
 const errorElement = document.querySelector("#form-error");
 const connectionStatus = document.querySelector("#connection-status");
@@ -80,6 +84,7 @@ let activePickerIndex = 0;
 let requestRunning = false;
 let availableProviderIds = ["codex", "claude"];
 let nativeProviders = [];
+let pendingAttachments = [];
 
 function getActiveSession() {
   return sessionState.sessions.find((session) => session.id === sessionState.activeSessionId);
@@ -262,11 +267,64 @@ function scrollToLatest() {
   timeline.scrollTop = timeline.scrollHeight;
 }
 
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} KB`;
+}
+
+function renderPendingAttachments() {
+  pendingAttachmentsElement.replaceChildren();
+  pendingAttachmentsElement.hidden = pendingAttachments.length === 0;
+  for (const attachment of pendingAttachments) {
+    const chip = document.createElement("span");
+    chip.className = "attachment-chip";
+    const label = document.createElement("span");
+    label.textContent = `${attachment.name} · ${formatFileSize(attachment.size)}`;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.setAttribute("aria-label", `移除 ${attachment.name}`);
+    remove.textContent = "×";
+    remove.addEventListener("click", () => {
+      pendingAttachments = pendingAttachments.filter((candidate) => candidate.id !== attachment.id);
+      renderPendingAttachments();
+    });
+    chip.append(label, remove);
+    pendingAttachmentsElement.append(chip);
+  }
+}
+
+async function selectAttachments() {
+  try {
+    const selected = await readTextAttachments(attachmentInput.files);
+    pendingAttachments = [...pendingAttachments, ...selected];
+    pendingAttachments = await readTextAttachments(pendingAttachments.map((attachment) => ({
+      ...attachment,
+      text: async () => attachment.content,
+    })));
+    setError("");
+    renderPendingAttachments();
+  } catch (error) {
+    setError(error instanceof Error ? error.message : String(error));
+  } finally {
+    attachmentInput.value = "";
+  }
+}
+
 function createUserElement(record) {
   const fragment = userTemplate.content.cloneNode(true);
   const element = fragment.querySelector(".message");
   element.querySelector("time").textContent = formatTime(record.createdAt);
   element.querySelector(".message-text").textContent = record.promptText ?? record.text;
+  const attachmentList = element.querySelector(".message-attachments");
+  if (record.attachments?.length) {
+    attachmentList.hidden = false;
+    for (const attachment of record.attachments) {
+      const chip = document.createElement("span");
+      chip.className = "attachment-chip attachment-chip-saved";
+      chip.textContent = `${attachment.name} · ${formatFileSize(attachment.size)}`;
+      attachmentList.append(chip);
+    }
+  }
   element.querySelector(".message-targets").textContent = `发送给 ${record.providers.map((id) => PROVIDER_SHORT_LABELS[id] ?? id).join("、")}`;
   return element;
 }
@@ -365,11 +423,16 @@ async function sendMessage() {
     text: promptInput.value.trim(),
     promptText: route.prompt,
     providers: route.providers,
+    attachments: attachmentMetadata(pendingAttachments),
   });
+  const attachmentsForRequest = pendingAttachments;
   setError("");
   promptInput.value = "";
+  pendingAttachments = [];
+  renderPendingAttachments();
   sendButton.disabled = true;
   promptInput.disabled = true;
+  attachFilesButton.disabled = true;
   newChatButton.disabled = true;
   requestRunning = true;
   syncActiveSessionControls();
@@ -379,7 +442,8 @@ async function sendMessage() {
   renderRecord(userMessage);
 
   const pending = new Map(route.providers.map((providerId) => [providerId, createPendingElement(providerId)]));
-  const providerPrompt = buildProviderPrompt(historyBeforeMessage, route.prompt, getActiveSession().contextMode);
+  const currentPrompt = addTextAttachmentsToPrompt(route.prompt, attachmentsForRequest);
+  const providerPrompt = buildProviderPrompt(historyBeforeMessage, currentPrompt, getActiveSession().contextMode);
 
   try {
     const results = await askNativeCompanion(providerPrompt, route.providers, {
@@ -422,6 +486,7 @@ async function sendMessage() {
   } finally {
     sendButton.disabled = false;
     promptInput.disabled = false;
+    attachFilesButton.disabled = false;
     newChatButton.disabled = false;
     requestRunning = false;
     syncActiveSessionControls();
@@ -509,6 +574,8 @@ await loadProviders();
 await loadInstructions();
 await loadAgentSettings();
 sendButton.addEventListener("click", sendMessage);
+attachFilesButton.addEventListener("click", () => attachmentInput.click());
+attachmentInput.addEventListener("change", selectAttachments);
 promptInput.addEventListener("keydown", (event) => {
   if (!mentionPicker.hidden) {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -551,6 +618,8 @@ newChatButton.addEventListener("click", async () => {
   if (requestRunning) return;
   sessionState = await store.startNew();
   conversationRecords = getActiveSession().records;
+  pendingAttachments = [];
+  renderPendingAttachments();
   renderTimeline();
   renderSessionList();
   syncActiveSessionControls();
@@ -580,6 +649,8 @@ sessionList.addEventListener("click", async (event) => {
   if (!openButton || openButton.dataset.sessionId === sessionState.activeSessionId) return;
   sessionState = await store.select(openButton.dataset.sessionId);
   conversationRecords = getActiveSession().records;
+  pendingAttachments = [];
+  renderPendingAttachments();
   renderTimeline();
   renderSessionList();
   syncActiveSessionControls();

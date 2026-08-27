@@ -2,7 +2,7 @@
 
 ## 要证明什么
 
-在不使用默认模型 API、不读取或复制账号凭据、不修改 Agent 输出的前提下，Mac 本地 Chrome 侧边栏能否把同一个纯文本问题并行发送给 Codex 与 Claude 官方客户端，并把两份结果独立保存和展示。
+在不使用默认模型 API、不读取或复制账号凭据、不修改 Agent 输出的前提下，Mac 本地 Chrome 侧边栏能否把同一个问题及用户明确选择的本地文本附件发送给可用的官方 Agent 客户端，并把各份结果独立保存和展示。
 
 ## 当前架构
 
@@ -11,7 +11,9 @@ Chrome Side Panel
   └─ Native Messaging（固定扩展 ID）
       └─ Mac 本地 Companion（无数据库、无日志、无任意命令入口）
           ├─ Codex CLI ── 用户自己的 ChatGPT 订阅登录
-          └─ Claude CLI ── 用户自己的 Claude 订阅登录
+          ├─ Claude CLI ── 用户自己的 Claude 订阅登录
+          ├─ Antigravity CLI ── 用户自己的 Google 账号登录
+          └─ Grok Build CLI ── 用户自己的 xAI 账号登录
 ```
 
 扩展只拥有 `sidePanel`、`storage` 与 `nativeMessaging` 权限，不拥有 ChatGPT 或 Claude 网站权限。Companion 用固定参数启动两个客户端，Prompt 经 stdin 传入；两个结果互不覆盖，只在 `chrome.storage.local` 保存。
@@ -33,7 +35,7 @@ Chrome Side Panel
 - 保证 Agent CLI 输出与对应网页产品逐字一致。
 - AI Council 的角色、路由、投票、审议或 Consensus。
 - 默认 API 接入、云端代理、共享账号、共享订阅或凭据托管。
-- 附件、图片、语音、跨设备同步、多人协作和移动端。
+- PDF/图片/语音附件、跨设备同步、多人协作和移动端。文本与代码附件已纳入当前 PoC。
 - SQLite、检索、导出与正式安装包；这些属于 PoC 通过后的 MVP。
 - 直接派生 Open WebUI 或复用其现有实例、配置和数据库。
 
@@ -59,4 +61,4 @@ Chrome Side Panel
 
 ## PoC 通过后的下一步
 
-先完成浏览器端三项人工验收，再做历史搜索、取消请求、结构化错误与正式本地安装体验。暂不扩展平台、附件或云功能。
+先完成浏览器端人工验收，再做历史搜索、取消请求、结构化错误与正式本地安装体验。文本附件已进入 PoC；PDF、图片、语音和云功能暂不扩展。

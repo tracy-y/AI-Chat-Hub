@@ -55,8 +55,11 @@
           </div>
           <label class="sr-only" for="prompt">消息</label>
           <textarea id="prompt" rows="3" maxlength="50000" placeholder="输入消息，键入 @ 选择 Agent…" aria-autocomplete="list" aria-controls="mention-picker" aria-expanded="false"></textarea>
+          <div id="pending-attachments" class="pending-attachments" aria-live="polite" hidden></div>
           <div class="composer-footer">
             <p id="form-error" class="form-error" role="alert" hidden></p>
+            <input id="attachment-input" class="sr-only" type="file" multiple accept="text/*,.md,.markdown,.json,.jsonl,.csv,.tsv,.xml,.yaml,.yml,.js,.mjs,.cjs,.ts,.tsx,.jsx,.css,.html,.py,.rb,.go,.rs,.java,.kt,.swift,.c,.h,.cpp,.hpp,.sh,.zsh,.fish,.sql,.toml,.ini,.conf,.env,.log" />
+            <button id="attach-files" class="attach-button" type="button" aria-label="添加本地文本文件">＋ 文件</button>
             <span id="connection-status">本机直连</span>
             <label class="context-mode-label" for="context-mode">上下文</label>
             <select id="context-mode" title="超长内容会按字符上限优先保留最新记录">
@@ -122,6 +125,7 @@
       <article class="message message-user">
         <div class="message-meta"><span>你</span><time></time></div>
         <pre class="message-text"></pre>
+        <div class="message-attachments" hidden></div>
         <p class="message-targets"></p>
       </article>
     </template>

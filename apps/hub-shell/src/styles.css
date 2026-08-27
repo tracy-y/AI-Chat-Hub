@@ -8,7 +8,7 @@
 * { box-sizing: border-box; }
 html, body { max-width: 100%; overflow-x: hidden; }
 body { margin: 0; min-width: 320px; background: #f4f2ed; }
-button, textarea, input { font: inherit; }
+button, textarea, input, select { font: inherit; }
 button { cursor: pointer; }
 
 .app-shell {
@@ -101,6 +101,14 @@ button { cursor: pointer; }
 #prompt { width: 100%; resize: none; border: 0; border-radius: 12px; padding: 11px 12px; background: #fff; color: #18211d; line-height: 1.5; box-shadow: inset 0 0 0 1px #cfd6d2; }
 #prompt:focus-visible { outline: 3px solid rgb(40 108 84 / 20%); box-shadow: none; }
 .composer-footer { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: 34px; margin-top: 7px; }
+.pending-attachments, .message-attachments { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.pending-attachments[hidden], .message-attachments[hidden] { display: none; }
+.attachment-chip { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; border: 1px solid #bed0c7; border-radius: 999px; padding: 5px 8px; background: #edf5f1; color: #355d4f; font-size: 9px; font-weight: 700; }
+.attachment-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attachment-chip button { border: 0; padding: 0 2px; background: transparent; color: #8f3f38; font-size: 14px; line-height: 1; }
+.attachment-chip-saved { border-color: rgb(255 255 255 / 28%); background: rgb(255 255 255 / 12%); color: inherit; }
+.attach-button { flex: 0 0 auto; border: 1px solid #cbd4cf; border-radius: 9px; padding: 7px 9px; background: #fff; color: #355d4f; font-size: 10px; font-weight: 800; }
+.attach-button:disabled { cursor: wait; opacity: 0.55; }
 .context-mode-label { margin-left: auto; color: #829089; font-size: 9px; }
 #context-mode { max-width: 112px; border: 1px solid #cbd4cf; border-radius: 8px; padding: 6px 7px; background: #fff; color: #3d554b; font-size: 9px; font-weight: 700; }
 #context-mode:disabled { cursor: wait; opacity: 0.55; }
@@ -166,7 +174,8 @@ button { cursor: pointer; }
   :root, body { background: #121815; color: #edf3ef; }
   .chat-shell, .manual-fallback, .instruction-panel, .agent-settings-panel, .conversation-history { border-color: rgb(255 255 255 / 12%); background: #19211d; }
   .empty-state h2 { color: #eef4f0; }
-  .text-button, .message-body, #prompt, #context-mode, #user-instructions, .response-input, .source-input, .agent-setting-card, .agent-model-select, .agent-custom-model, .agent-instruction { border-color: #46544d; background: #202b26; color: #edf3ef; }
+  .text-button, .message-body, #prompt, #context-mode, #user-instructions, .response-input, .source-input, .agent-setting-card, .agent-model-select, .agent-custom-model, .agent-instruction, .attach-button { border-color: #46544d; background: #202b26; color: #edf3ef; }
+  .attachment-chip { border-color: #4f7565; background: #26362f; color: #cce9dd; }
   .composer { border-color: #36433d; background: #17201c; }
   .agent-avatar { background: #293d35; color: #9dd5bf; }
   .mention-picker { border-color: #46544d; background: #202b26; }
