@@ -7,10 +7,12 @@ import { addTextAttachmentsToPrompt, attachmentMetadata, readTextAttachments } f
 import { createUserMessage } from "./core/user-message.js";
 import {
   askNativeCompanion,
+  getNativeApiProviderSettings,
   getNativeInstructions,
   getNativeProviders,
   getNativeProviderSettings,
   saveNativeInstructions,
+  saveNativeApiProviderSettings,
   saveNativeProviderSettings,
 } from "./native-client.js";
 import { createChromeChatSessionStore } from "./storage/chat-session-store.js";
@@ -20,8 +22,8 @@ const PROVIDER_LABELS = Object.freeze({
   claude: "Claude Agent（Claude 订阅）",
   gemini: "Gemini via Antigravity（Google 订阅）",
   grok: "Grok Build（xAI 账号）",
-  qwen: "Qwen 网页（待接入）",
-  deepseek: "DeepSeek 网页（待接入）",
+  qwen: "Qwen（可选 API）",
+  deepseek: "DeepSeek（可选 API）",
 });
 const PROVIDER_SHORT_LABELS = Object.freeze({ codex: "Codex", claude: "Claude", gemini: "Gemini", grok: "Grok", qwen: "Qwen", deepseek: "DeepSeek" });
 const PROVIDER_AVATARS = Object.freeze({ codex: "G", claude: "C", gemini: "M", grok: "X", qwen: "Q", deepseek: "D" });
@@ -43,8 +45,18 @@ const PROVIDER_MODEL_CHOICES = Object.freeze({
     { value: "", label: "官方默认 · Grok 4.6（已验证）" },
     { value: "grok-4.6", label: "Grok 4.6" },
   ],
-  qwen: [{ value: "", label: "官网当前模型" }],
-  deepseek: [{ value: "", label: "官网当前模型" }],
+  qwen: [
+    { value: "", label: "API 默认 · qwen3.5-plus" },
+    { value: "qwen3.5-plus", label: "qwen3.5-plus" },
+    { value: "qwen3.6-plus", label: "qwen3.6-plus · Pro" },
+    { value: "qwen3.7-plus", label: "qwen3.7-plus" },
+    { value: "qwen3-coder-plus", label: "qwen3-coder-plus" },
+  ],
+  deepseek: [
+    { value: "", label: "API 默认 · deepseek-chat" },
+    { value: "deepseek-chat", label: "deepseek-chat" },
+    { value: "deepseek-reasoner", label: "deepseek-reasoner" },
+  ],
 });
 const adapters = new Map([
   ["chatgpt", createManualRelayAdapter({ id: "chatgpt", label: "ChatGPT 网页", officialUrl: "https://chatgpt.com/", allowedHosts: ["chatgpt.com"] })],
@@ -76,6 +88,8 @@ const saveInstructionsButton = document.querySelector("#save-instructions");
 const agentSettingsList = document.querySelector("#agent-settings-list");
 const agentSettingsStatus = document.querySelector("#agent-settings-status");
 const agentSettingsTemplate = document.querySelector("#agent-settings-template");
+const apiSettingsStatus = document.querySelector("#api-settings-status");
+const apiSettingCards = [...document.querySelectorAll("[data-api-provider]")];
 let sessionState = await store.load();
 let conversationRecords = getActiveSession().records;
 let activeMention = null;
@@ -131,8 +145,12 @@ async function loadProviders() {
   for (const option of pickerOptions) {
     const providerId = option.dataset.providerId;
     if (!providerId) continue;
-    option.dataset.available = String(availableProviderIds.includes(providerId));
-    option.hidden = option.dataset.available !== "true";
+    const available = availableProviderIds.includes(providerId);
+    option.dataset.available = String(available);
+    option.disabled = !available;
+    option.hidden = false;
+    const providerState = option.querySelector("[data-provider-state]");
+    if (providerState) providerState.textContent = available ? "当前可用" : "官方网页 Bridge · 待接入";
   }
   const allDescription = mentionPicker.querySelector("[data-all-description]");
   if (allDescription) allDescription.textContent = `同时询问 ${availableProviderIds.length} 个可用 Agent`;
@@ -141,9 +159,63 @@ async function loadProviders() {
 function providerStateLabel(providerId) {
   const provider = nativeProviders.find((candidate) => candidate.id === providerId);
   if (provider?.available) return "当前可用";
+  if (["qwen", "deepseek"].includes(providerId) && provider?.installed) return "API Key 已保存 · 当前关闭";
+  if (["qwen", "deepseek"].includes(providerId)) return "可选 API · 默认关闭";
   if (provider?.installed) return "已安装 · 需要登录";
-  if (["qwen", "deepseek"].includes(providerId)) return "官方网页 Bridge 待接入";
   return "本机尚未安装";
+}
+
+async function loadApiSettings() {
+  apiSettingsStatus.dataset.status = "";
+  apiSettingsStatus.textContent = "正在读取 macOS Keychain 状态…";
+  try {
+    const result = await getNativeApiProviderSettings();
+    const byProvider = new Map(result.settings.map((settings) => [settings.providerId, settings]));
+    for (const card of apiSettingCards) {
+      const settings = byProvider.get(card.dataset.apiProvider);
+      if (!settings) continue;
+      card.querySelector(".api-enabled").checked = settings.enabled;
+      card.querySelector(".api-region").value = settings.region;
+      const keyInput = card.querySelector(".api-key-input");
+      keyInput.maxLength = result.maxApiKeyCharacters ?? 512;
+      keyInput.value = "";
+      card.querySelector(".api-key-state").textContent = settings.keyConfigured
+        ? `Keychain 已保存 · ${settings.enabled ? "API 已启用" : "API 已关闭"}`
+        : "尚未保存 API Key · 默认关闭";
+    }
+    apiSettingsStatus.textContent = "API Key 内容不会返回到扩展界面。";
+  } catch (error) {
+    apiSettingsStatus.textContent = error instanceof Error ? error.message : String(error);
+    apiSettingsStatus.dataset.status = "failed";
+  }
+}
+
+async function saveApiSetting(card) {
+  const providerId = card.dataset.apiProvider;
+  const button = card.querySelector(".save-api-setting");
+  const status = card.querySelector(".api-save-status");
+  const keyInput = card.querySelector(".api-key-input");
+  button.disabled = true;
+  status.dataset.status = "";
+  status.textContent = "正在安全保存…";
+  try {
+    await saveNativeApiProviderSettings(
+      providerId,
+      card.querySelector(".api-enabled").checked,
+      card.querySelector(".api-region").value,
+      keyInput.value.trim(),
+    );
+    keyInput.value = "";
+    status.textContent = "已保存到本机；Key 在 macOS Keychain 中。";
+    await loadProviders();
+    await loadApiSettings();
+    await loadAgentSettings();
+  } catch (error) {
+    status.textContent = error instanceof Error ? error.message : String(error);
+    status.dataset.status = "failed";
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function updateAgentInstructionCount(card) {
@@ -519,9 +591,11 @@ function updateMentionPicker() {
   }
 
   visiblePickerOptions = pickerOptions.filter((option) => {
-    const visible = option.dataset.available !== "false" && option.dataset.search.includes(activeMention.query);
-    option.hidden = !visible;
-    return visible;
+    const matches = option.dataset.search.includes(activeMention.query);
+    // Keep planned web providers visible as disabled choices, but never include
+    // them in keyboard/click selection until a supported bridge is available.
+    option.hidden = !matches;
+    return matches && option.dataset.available !== "false";
   });
   if (visiblePickerOptions.length === 0) {
     hideMentionPicker();
@@ -573,6 +647,7 @@ syncActiveSessionControls();
 await loadProviders();
 await loadInstructions();
 await loadAgentSettings();
+await loadApiSettings();
 sendButton.addEventListener("click", sendMessage);
 attachFilesButton.addEventListener("click", () => attachmentInput.click());
 attachmentInput.addEventListener("change", selectAttachments);
@@ -666,3 +741,6 @@ contextModeSelect.addEventListener("change", async () => {
 });
 instructionInput.addEventListener("input", updateInstructionCount);
 saveInstructionsButton.addEventListener("click", saveInstructions);
+for (const card of apiSettingCards) {
+  card.querySelector(".save-api-setting").addEventListener("click", () => saveApiSetting(card));
+}

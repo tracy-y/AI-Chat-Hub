@@ -6,7 +6,7 @@ AI Chat Hub 是一个 Mac 本地 Chrome 侧边栏 PoC。所有消息出现在同
 
 后续问题会按当前会话选择的上下文档位，把最近的聊天记录交给被点名的 Agent。简单聊天保留 20 条/约 16,000 字符，一般聊天保留 50 条/约 40,000 字符，深度策划保留 100 条/约 70,000 字符；超长时优先保留最新内容。Agent 输出仍按来源独立显示，不互相覆盖。
 
-> 当前“直接回答”支持 Codex、Claude Agent、Gemini via Antigravity 和 Grok Build；菜单只显示本机已安装的客户端，未登录时会在首次调用显示官方客户端错误。旧 Gemini CLI 的个人 Google 登录已停用，因此 Gemini 改走 Google 官方 Antigravity CLI。Qwen 与 DeepSeek 没有符合本项目边界的订阅 OAuth CLI，将使用独立的官方网页模式，不以 API Key 冒充订阅接入。
+> 当前“订阅直连”支持 Codex、Claude Agent、Gemini via Antigravity 和 Grok Build。Qwen 与 DeepSeek 没有可复用其消费级网页账号的官方 OAuth CLI，因此提供默认关闭、明确标记的可选 API 模式；API 回复不会冒充网页订阅回复。
 
 ## 隐私边界
 
@@ -18,6 +18,7 @@ AI Chat Hub 是一个 Mac 本地 Chrome 侧边栏 PoC。所有消息出现在同
 - 用户可在扩展中维护全局长期说明，单独保存在 `~/Library/Application Support/AI Chat Hub/instructions/README.md`（目录 `0700`、文件 `0600`），不进入 Git 或聊天数据库。提问时该内容会发送给被选中的官方 Agent，因此不得写入密码、Cookie、API key 或验证码。
 - 每个 Agent 还有独立且默认留空的专属 Instruction，保存在 `instructions/providers/<agent>.md`；模型选择保存在私有的 `settings/providers.json`。只有被点名的 Agent 会收到自己的专属说明，用户可随时修改或清空。
 - 聊天框可添加最多 5 个本地文本附件（文本、Markdown、代码、JSON、CSV 等）。正文只在当前发送过程中交给被选中的 Agent；聊天记录只保存文件名、类型和大小，不把文件正文写入 Git 或本地聊天数据库。单文件上限 1 MB / 20,000 字符，合计上限 35,000 字符。
+- Qwen 和 DeepSeek 的“可选 API 模式”默认关闭。启用状态与区域保存在本机私有设置文件，API Key 通过无命令行明文参数的方式写入 macOS Keychain；Native Companion 只向扩展返回“是否已配置”，绝不返回 Key 内容。
 
 ## 本机运行
 

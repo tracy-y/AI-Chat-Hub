@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI Chat Hub PoC",
-  "version": "0.7.0",
+  "version": "0.9.0",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArg8hw7Qi3uHMhf/lqTBlZpHfbBgIIA1fQi0YRlTRLxiB3T4QHePMmlQkWyT8RkGcpyAHgGciCT/qtmwf/3S4b2H2OMnQ9GSrID/IpQtw3vvhp91Yv2hCsP1UvoFycZvazCreRc5JTvPe+22HZpsDlM4QDETp0Kd7nlOLUQQTtlBOR6np+9qm+FhmhU50KZYR6nWQJti1oNqceLAAiyVAaOSK342Khk1oWW6+gPQXieSIomtmra/qU3RUfiS2SdIwt0R/pAFQCtoXGwQuL8wKgU+mjhyyAynz7xTn23gyoV+Fkou3QSTrjVRPsQsQnSsZPSVaYptgVsiql5WKfouNrQIDAQAB",
   "description": "Local-first hub for direct answers through official subscription-backed agents.",
   "minimum_chrome_version": "114",

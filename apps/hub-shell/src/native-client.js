@@ -64,6 +64,24 @@ export async function saveNativeProviderSettings(providerId, model, instruction,
   }, "providerSettingsSaved", options);
 }
 
+export async function getNativeApiProviderSettings(options) {
+  const message = await requestNativeMessage({ type: "api-settings:get" }, "apiProviderSettings", options);
+  return {
+    settings: Array.isArray(message.settings) ? message.settings : [],
+    maxApiKeyCharacters: message.maxApiKeyCharacters,
+  };
+}
+
+export async function saveNativeApiProviderSettings(providerId, enabled, region, apiKey, options) {
+  return requestNativeMessage({
+    type: "api-settings:set",
+    providerId,
+    enabled,
+    region,
+    apiKey,
+  }, "apiProviderSettingsSaved", options);
+}
+
 export function askNativeCompanion(prompt, providers, {
   chromeApi = globalThis.chrome,
   onStarted = () => undefined,

@@ -47,6 +47,16 @@
               <span><strong>Grok Build</strong><small>xAI 账号</small></span>
               <kbd>@grok</kbd>
             </button>
+            <button type="button" role="option" data-agent-token="@qwen" data-provider-id="qwen" data-search="qwen tongyi 通义 千问" disabled>
+              <span class="picker-avatar picker-qwen">Q</span>
+              <span><strong>Qwen</strong><small data-provider-state>官方网页 Bridge · 待接入</small></span>
+              <kbd>@qwen</kbd>
+            </button>
+            <button type="button" role="option" data-agent-token="@deepseek" data-provider-id="deepseek" data-search="deepseek 深度求索" disabled>
+              <span class="picker-avatar picker-deepseek">D</span>
+              <span><strong>DeepSeek</strong><small data-provider-state>官方网页 Bridge · 待接入</small></span>
+              <kbd>@deepseek</kbd>
+            </button>
             <button type="button" role="option" data-agent-token="@all" data-search="all both everyone 全部">
               <span class="picker-avatar picker-all">＋</span>
               <span><strong>全部 Agent</strong><small data-all-description>同时询问可用 Agent</small></span>
@@ -97,6 +107,36 @@
         <p class="instruction-help">每个 Agent 的内容互相独立，默认留空。只有向该 Agent 提问时才会发送它的专属 Instruction；所有设置仅保存在这台 Mac。</p>
         <div id="agent-settings-list" class="agent-settings-list"></div>
         <p id="agent-settings-status" class="save-status" role="status"></p>
+      </details>
+
+      <details class="api-settings-panel">
+        <summary>可选 API 模式 · 默认关闭</summary>
+        <p class="instruction-help">仅用于 Qwen 和 DeepSeek。API Key 通过本地 Companion 写入 macOS Keychain，不保存到扩展、聊天记录或 Git。启用后可能产生供应商费用。</p>
+        <div id="api-settings-list" class="api-settings-list">
+          <article class="api-setting-card" data-api-provider="qwen">
+            <header><div class="agent-setting-avatar picker-qwen">Q</div><div><strong>Qwen</strong><small class="api-key-state">正在读取…</small></div></header>
+            <label class="api-toggle"><input class="api-enabled" type="checkbox" /> 启用可选 API 模式</label>
+            <label>区域
+              <select class="api-region"><option value="international">国际区（推荐）</option><option value="china">中国区</option></select>
+            </label>
+            <label>Alibaba Cloud Coding Plan API Key
+              <input class="api-key-input" type="password" autocomplete="new-password" placeholder="留空表示保留 Keychain 中现有 Key" />
+            </label>
+            <button class="save-api-setting" type="button">保存 Qwen API 设置</button>
+            <p class="save-status api-save-status" role="status"></p>
+          </article>
+          <article class="api-setting-card" data-api-provider="deepseek">
+            <header><div class="agent-setting-avatar picker-deepseek">D</div><div><strong>DeepSeek</strong><small class="api-key-state">正在读取…</small></div></header>
+            <label class="api-toggle"><input class="api-enabled" type="checkbox" /> 启用可选 API 模式</label>
+            <input class="api-region" type="hidden" value="international" />
+            <label>DeepSeek API Key
+              <input class="api-key-input" type="password" autocomplete="new-password" placeholder="留空表示保留 Keychain 中现有 Key" />
+            </label>
+            <button class="save-api-setting" type="button">保存 DeepSeek API 设置</button>
+            <p class="save-status api-save-status" role="status"></p>
+          </article>
+        </div>
+        <p id="api-settings-status" class="save-status" role="status"></p>
       </details>
 
       <details class="manual-fallback">

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { askClaude, askCodex, askGemini, askGrok, askSelectedProviders } from "../../apps/local-companion/src/providers.mjs";
+import { askClaude, askCodex, askDeepSeek, askGemini, askGrok, askQwen, askSelectedProviders } from "../../apps/local-companion/src/providers.mjs";
 
 test("Codex receives the exact prompt through stdin with fixed safe arguments", async () => {
   const calls = [];
@@ -89,6 +89,31 @@ test("Grok uses a private prompt file with tools disabled and preserves stdout",
   assert.ok(calls[0].args.includes("plan"));
   assert.ok(calls[0].args.includes("--tools"));
   assert.equal(result.rawText, "Grok 原始回答\n");
+});
+
+test("Qwen optional API uses the international Coding Plan endpoint and preserves content", async () => {
+  let call;
+  const result = await askQwen("Qwen prompt", {
+    apiKey: "sk-local",
+    fetch: async (url, options) => {
+      call = { url, options };
+      return { ok: true, status: 200, text: async () => JSON.stringify({ choices: [{ message: { content: "Qwen 原始 API 回答" } }] }) };
+    },
+  });
+  assert.equal(call.url, "https://coding-intl.dashscope.aliyuncs.com/v1/chat/completions");
+  assert.equal(call.options.headers.Authorization, "Bearer sk-local");
+  assert.deepEqual(JSON.parse(call.options.body).messages, [{ role: "user", content: "Qwen prompt" }]);
+  assert.equal(result.rawText, "Qwen 原始 API 回答");
+});
+
+test("DeepSeek optional API uses the official endpoint and does not expose response bodies on errors", async () => {
+  const result = await askDeepSeek("DeepSeek prompt", {
+    apiKey: "sk-local",
+    fetch: async () => ({ ok: false, status: 401, text: async () => "secret server body" }),
+  });
+  assert.equal(result.status, "failed");
+  assert.match(result.error, /HTTP 401/);
+  assert.doesNotMatch(result.error, /secret server body/);
 });
 
 test("provider failures do not expose the home path", async () => {

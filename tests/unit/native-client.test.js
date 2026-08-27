@@ -2,11 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   askNativeCompanion,
+  getNativeApiProviderSettings,
   getNativeInstructions,
   getNativeProviders,
   getNativeProviderSettings,
   NATIVE_HOST_NAME,
   saveNativeInstructions,
+  saveNativeApiProviderSettings,
   saveNativeProviderSettings,
 } from "../../apps/hub-shell/src/native-client.js";
 
@@ -54,6 +56,30 @@ test("native client sends one prompt and returns matching provider results", asy
   assert.deepEqual(posted[0].providers, ["claude"]);
   assert.deepEqual(started, [["codex", "claude"]]);
   assert.deepEqual(results, [{ providerId: "codex", status: "completed" }]);
+});
+
+test("native client reads and saves optional API settings without receiving secret values", async () => {
+  const posted = [];
+  const chromeApi = createInstructionChromeApi((message, onMessage) => {
+    posted.push(message);
+    if (message.type === "api-settings:get") {
+      onMessage.emit({
+        id: message.id,
+        type: "apiProviderSettings",
+        settings: [{ providerId: "qwen", enabled: false, region: "international", keyConfigured: true }],
+        maxApiKeyCharacters: 512,
+      });
+    } else {
+      onMessage.emit({ id: message.id, type: "apiProviderSettingsSaved", settings: { providerId: "qwen", enabled: true } });
+    }
+  });
+
+  const result = await getNativeApiProviderSettings({ chromeApi });
+  assert.equal(result.settings[0].keyConfigured, true);
+  assert.equal(Object.hasOwn(result.settings[0], "apiKey"), false);
+  await saveNativeApiProviderSettings("qwen", true, "international", "sk-new", { chromeApi });
+  assert.equal(posted[1].apiKey, "sk-new");
+  assert.equal(posted[1].region, "international");
 });
 
 function createInstructionChromeApi(onPost) {

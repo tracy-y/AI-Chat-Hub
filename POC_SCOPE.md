@@ -35,6 +35,7 @@ Chrome Side Panel
 - 保证 Agent CLI 输出与对应网页产品逐字一致。
 - AI Council 的角色、路由、投票、审议或 Consensus。
 - 默认 API 接入、云端代理、共享账号、共享订阅或凭据托管。
+- Qwen / DeepSeek 的 API 不是默认接入；只有用户在高级设置中分别提供本机 Key 并主动开启后才可用。
 - PDF/图片/语音附件、跨设备同步、多人协作和移动端。文本与代码附件已纳入当前 PoC。
 - SQLite、检索、导出与正式安装包；这些属于 PoC 通过后的 MVP。
 - 直接派生 Open WebUI 或复用其现有实例、配置和数据库。
@@ -42,6 +43,7 @@ Chrome Side Panel
 ## 安全边界
 
 - 账号登录、token 与订阅状态由官方客户端保管，不进入仓库、Hub 历史或 Companion 日志。
+- 可选 API Key 仅保存在 macOS Keychain；本地 JSON 只记录开关和区域，扩展永远读不到已保存的 Key。
 - Native host 只接受本项目固定 Chrome 扩展 ID。
 - Companion 不接受前端提供的命令、可执行文件路径或 CLI 参数。
 - Claude 禁用工具、浏览器联动和会话持久化。

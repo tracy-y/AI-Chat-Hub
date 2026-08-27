@@ -54,6 +54,39 @@ function modelArguments(model) {
   return model ? ["--model", model] : [];
 }
 
+async function askOpenAiCompatible(prompt, {
+  providerId,
+  providerLabel,
+  apiKey,
+  baseUrl,
+  model,
+  fetchImpl = fetch,
+}) {
+  try {
+    if (typeof apiKey !== "string" || !apiKey) throw new Error(`${providerLabel} API key is not configured`);
+    const response = await fetchImpl(`${baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(180_000),
+    });
+    if (!response.ok) throw new Error(`${providerLabel} API request failed (HTTP ${response.status})`);
+    const payload = JSON.parse(await response.text());
+    const rawText = payload?.choices?.[0]?.message?.content;
+    if (typeof rawText !== "string" || !rawText.trim()) throw new Error(`${providerLabel} API returned an empty answer`);
+    return { providerId, providerLabel, status: "completed", rawText };
+  } catch (error) {
+    return safeFailure(providerId, providerLabel, error);
+  }
+}
+
 export async function askCodex(prompt, options = {}) {
   const providerId = "codex";
   const providerLabel = "Codex（ChatGPT 订阅）";
@@ -174,11 +207,44 @@ export async function askGrok(prompt, options = {}) {
   }
 }
 
+export async function askQwen(prompt, options = {}) {
+  const region = options.region === "china" ? "china" : "international";
+  const baseUrl = region === "china"
+    ? "https://coding.dashscope.aliyuncs.com/v1"
+    : "https://coding-intl.dashscope.aliyuncs.com/v1";
+  return askOpenAiCompatible(prompt, {
+    providerId: "qwen",
+    providerLabel: "Qwen（可选 API）",
+    apiKey: options.apiKey,
+    baseUrl,
+    model: options.model || "qwen3.5-plus",
+    fetchImpl: options.fetch,
+  });
+}
+
+export async function askDeepSeek(prompt, options = {}) {
+  return askOpenAiCompatible(prompt, {
+    providerId: "deepseek",
+    providerLabel: "DeepSeek（可选 API）",
+    apiKey: options.apiKey,
+    baseUrl: "https://api.deepseek.com",
+    model: options.model || "deepseek-chat",
+    fetchImpl: options.fetch,
+  });
+}
+
 export async function askAllProviders(prompt, options = {}) {
   return askSelectedProviders(prompt, PROVIDER_IDS, options);
 }
 
-const PROVIDERS = Object.freeze({ codex: askCodex, claude: askClaude, gemini: askGemini, grok: askGrok });
+const PROVIDERS = Object.freeze({
+  codex: askCodex,
+  claude: askClaude,
+  gemini: askGemini,
+  grok: askGrok,
+  qwen: askQwen,
+  deepseek: askDeepSeek,
+});
 export const PROVIDER_IDS = Object.freeze(Object.keys(PROVIDERS));
 
 const PROVIDER_METADATA = Object.freeze({
@@ -186,6 +252,8 @@ const PROVIDER_METADATA = Object.freeze({
   claude: { label: "Claude Agent（Claude 订阅）", environment: "AI_CHAT_HUB_CLAUDE_BIN" },
   gemini: { label: "Gemini via Antigravity（Google 订阅）", environment: "AI_CHAT_HUB_ANTIGRAVITY_BIN" },
   grok: { label: "Grok Build（xAI 账号）", environment: "AI_CHAT_HUB_GROK_BIN" },
+  qwen: { label: "Qwen（可选 API）", environment: "" },
+  deepseek: { label: "DeepSeek（可选 API）", environment: "" },
 });
 
 async function executableExists(command) {
