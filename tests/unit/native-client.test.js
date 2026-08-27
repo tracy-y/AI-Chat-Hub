@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { askNativeCompanion, getNativeInstructions, NATIVE_HOST_NAME, saveNativeInstructions } from "../../apps/hub-shell/src/native-client.js";
+import { askNativeCompanion, getNativeInstructions, getNativeProviders, NATIVE_HOST_NAME, saveNativeInstructions } from "../../apps/hub-shell/src/native-client.js";
 
 function createEvent() {
   const listeners = [];
@@ -77,4 +77,11 @@ test("native client sends instruction content only to the fixed native host", as
   assert.equal(posted.type, "instructions:set");
   assert.equal(posted.content, "local preference");
   assert.equal(result.characters, 16);
+});
+
+test("native client lists local provider availability without credential data", async () => {
+  const chromeApi = createInstructionChromeApi((message, onMessage) => {
+    onMessage.emit({ id: message.id, type: "providers", providers: [{ id: "gemini", available: true, installed: true }] });
+  });
+  assert.deepEqual(await getNativeProviders({ chromeApi }), [{ id: "gemini", available: true, installed: true }]);
 });

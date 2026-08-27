@@ -21,25 +21,35 @@
           <div id="empty-state" class="empty-state">
             <span class="empty-mark">@</span>
             <h2>选择要回答的 Agent</h2>
-            <p>在输入框键入 <code>@</code>，从弹出的菜单选择一个或全部 Agent。不选择时默认同时询问两个。</p>
+            <p>在输入框键入 <code>@</code>，从弹出的菜单选择一个或全部可用 Agent。不选择时默认询问全部。</p>
           </div>
         </div>
 
         <div class="composer">
           <div id="mention-picker" class="mention-picker" role="listbox" aria-label="选择回答的 Agent" hidden>
-            <button type="button" role="option" data-agent-token="@codex" data-search="codex gpt chatgpt openai">
+            <button type="button" role="option" data-agent-token="@codex" data-provider-id="codex" data-search="codex gpt chatgpt openai">
               <span class="picker-avatar picker-codex">G</span>
               <span><strong>Codex</strong><small>ChatGPT 订阅</small></span>
               <kbd>@codex</kbd>
             </button>
-            <button type="button" role="option" data-agent-token="@claude" data-search="claude anthropic">
+            <button type="button" role="option" data-agent-token="@claude" data-provider-id="claude" data-search="claude anthropic">
               <span class="picker-avatar picker-claude">C</span>
               <span><strong>Claude Agent</strong><small>Claude 订阅</small></span>
               <kbd>@claude</kbd>
             </button>
+            <button type="button" role="option" data-agent-token="@gemini" data-provider-id="gemini" data-search="gemini google">
+              <span class="picker-avatar picker-gemini">M</span>
+              <span><strong>Gemini</strong><small>Antigravity · Google 订阅</small></span>
+              <kbd>@gemini</kbd>
+            </button>
+            <button type="button" role="option" data-agent-token="@grok" data-provider-id="grok" data-search="grok xai x">
+              <span class="picker-avatar picker-grok">X</span>
+              <span><strong>Grok Build</strong><small>xAI 账号</small></span>
+              <kbd>@grok</kbd>
+            </button>
             <button type="button" role="option" data-agent-token="@all" data-search="all both everyone 全部">
               <span class="picker-avatar picker-all">＋</span>
-              <span><strong>全部 Agent</strong><small>同时询问两个</small></span>
+              <span><strong>全部 Agent</strong><small data-all-description>同时询问可用 Agent</small></span>
               <kbd>@all</kbd>
             </button>
           </div>

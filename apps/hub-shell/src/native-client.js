@@ -41,6 +41,11 @@ export async function saveNativeInstructions(content, options) {
   return requestNativeMessage({ type: "instructions:set", content }, "instructionsSaved", options);
 }
 
+export async function getNativeProviders(options) {
+  const message = await requestNativeMessage({ type: "providers:list" }, "providers", options);
+  return Array.isArray(message.providers) ? message.providers : [];
+}
+
 export function askNativeCompanion(prompt, providers, {
   chromeApi = globalThis.chrome,
   onStarted = () => undefined,

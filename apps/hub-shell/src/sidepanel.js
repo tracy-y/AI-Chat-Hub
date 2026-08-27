@@ -4,13 +4,17 @@ import { buildProviderPrompt } from "./core/conversation-context.js";
 import { applyMentionSelection, findMentionQuery } from "./core/mention-autocomplete.js";
 import { parseMentionRouting } from "./core/mention-routing.js";
 import { createUserMessage } from "./core/user-message.js";
-import { askNativeCompanion, getNativeInstructions, saveNativeInstructions } from "./native-client.js";
+import { askNativeCompanion, getNativeInstructions, getNativeProviders, saveNativeInstructions } from "./native-client.js";
 import { createChromeChatSessionStore } from "./storage/chat-session-store.js";
 
 const PROVIDER_LABELS = Object.freeze({
   codex: "Codex（ChatGPT 订阅）",
   claude: "Claude Agent（Claude 订阅）",
+  gemini: "Gemini via Antigravity（Google 订阅）",
+  grok: "Grok Build（xAI 账号）",
 });
+const PROVIDER_SHORT_LABELS = Object.freeze({ codex: "Codex", claude: "Claude", gemini: "Gemini", grok: "Grok" });
+const PROVIDER_AVATARS = Object.freeze({ codex: "G", claude: "C", gemini: "M", grok: "X" });
 const adapters = new Map([
   ["chatgpt", createManualRelayAdapter({ id: "chatgpt", label: "ChatGPT 网页", officialUrl: "https://chatgpt.com/", allowedHosts: ["chatgpt.com"] })],
   ["claude", createManualRelayAdapter({ id: "claude", label: "Claude 网页", officialUrl: "https://claude.ai/", allowedHosts: ["claude.ai"] })],
@@ -41,6 +45,7 @@ let activeMention = null;
 let visiblePickerOptions = [];
 let activePickerIndex = 0;
 let requestRunning = false;
+let availableProviderIds = ["codex", "claude"];
 
 function getActiveSession() {
   return sessionState.sessions.find((session) => session.id === sessionState.activeSessionId);
@@ -72,6 +77,27 @@ async function loadInstructions() {
   updateInstructionCount();
 }
 
+async function loadProviders() {
+  try {
+    const providers = await getNativeProviders();
+    availableProviderIds = providers.filter((provider) => provider.available).map((provider) => provider.id);
+    const installedCount = providers.filter((provider) => provider.installed).length;
+    connectionStatus.textContent = `${availableProviderIds.length} 个 Agent 可用 · ${installedCount} 个已安装`;
+  } catch {
+    availableProviderIds = ["codex", "claude"];
+    connectionStatus.textContent = "本机直连";
+  }
+
+  for (const option of pickerOptions) {
+    const providerId = option.dataset.providerId;
+    if (!providerId) continue;
+    option.dataset.available = String(availableProviderIds.includes(providerId));
+    option.hidden = option.dataset.available !== "true";
+  }
+  const allDescription = mentionPicker.querySelector("[data-all-description]");
+  if (allDescription) allDescription.textContent = `同时询问 ${availableProviderIds.length} 个可用 Agent`;
+}
+
 async function saveInstructions() {
   saveInstructionsButton.disabled = true;
   instructionStatus.dataset.status = "";
@@ -100,7 +126,7 @@ function createUserElement(record) {
   const element = fragment.querySelector(".message");
   element.querySelector("time").textContent = formatTime(record.createdAt);
   element.querySelector(".message-text").textContent = record.promptText ?? record.text;
-  element.querySelector(".message-targets").textContent = `发送给 ${record.providers.map((id) => id === "codex" ? "Codex" : "Claude").join("、")}`;
+  element.querySelector(".message-targets").textContent = `发送给 ${record.providers.map((id) => PROVIDER_SHORT_LABELS[id] ?? id).join("、")}`;
   return element;
 }
 
@@ -108,7 +134,7 @@ function createAgentElement(record) {
   const fragment = agentTemplate.content.cloneNode(true);
   const element = fragment.querySelector(".message");
   element.dataset.provider = record.providerId;
-  element.querySelector(".agent-avatar").textContent = record.providerId === "claude" ? "C" : "G";
+  element.querySelector(".agent-avatar").textContent = PROVIDER_AVATARS[record.providerId] ?? "@";
   element.querySelector(".provider-name").textContent = record.providerLabel;
   element.querySelector("time").textContent = formatTime(record.capturedAt ?? record.createdAt);
   element.querySelector(".message-text").textContent = record.rawText ?? record.error;
@@ -186,7 +212,7 @@ async function appendRecord(record) {
 async function sendMessage() {
   let route;
   try {
-    route = parseMentionRouting(promptInput.value);
+    route = parseMentionRouting(promptInput.value, availableProviderIds);
   } catch (error) {
     setError(error instanceof Error ? error.message : String(error));
     promptInput.focus();
@@ -287,7 +313,7 @@ function updateMentionPicker() {
   }
 
   visiblePickerOptions = pickerOptions.filter((option) => {
-    const visible = option.dataset.search.includes(activeMention.query);
+    const visible = option.dataset.available !== "false" && option.dataset.search.includes(activeMention.query);
     option.hidden = !visible;
     return visible;
   });
@@ -338,6 +364,7 @@ async function saveManualResponse(providerId) {
 renderTimeline();
 renderSessionList();
 syncActiveSessionControls();
+await loadProviders();
 await loadInstructions();
 sendButton.addEventListener("click", sendMessage);
 promptInput.addEventListener("keydown", (event) => {

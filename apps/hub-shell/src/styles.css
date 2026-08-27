@@ -70,6 +70,8 @@ button { cursor: pointer; }
 .message-body { min-width: 0; border: 1px solid #d9dedb; border-radius: 4px 16px 16px; padding: 11px 13px; background: #fff; }
 .agent-avatar { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: #e5ece8; color: #315c4d; font-size: 12px; font-weight: 900; }
 .message[data-provider="claude"] .agent-avatar { background: #f1e7de; color: #8a4c29; }
+.message[data-provider="gemini"] .agent-avatar { background: #e1e9fa; color: #315f9e; }
+.message[data-provider="grok"] .agent-avatar { background: #e7e7e7; color: #202020; }
 .message-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; font-weight: 800; }
 .message-meta time { opacity: 0.58; font-weight: 500; }
 .message-text { overflow-wrap: anywhere; margin: 7px 0 0; white-space: pre-wrap; font: inherit; font-size: 13px; line-height: 1.58; }
@@ -92,6 +94,8 @@ button { cursor: pointer; }
 .mention-picker kbd { border: 1px solid #d7dfda; border-radius: 6px; padding: 3px 5px; background: #f6f8f7; color: #587067; font: 700 9px/1 ui-monospace, monospace; }
 .picker-avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: #e5ece8; color: #315c4d; font-size: 11px; font-weight: 900; }
 .picker-claude { background: #f1e7de; color: #8a4c29; }
+.picker-gemini { background: #e1e9fa; color: #315f9e; }
+.picker-grok { background: #e7e7e7; color: #202020; }
 .picker-all { background: #e9e7f2; color: #554a80; }
 #connection-status { flex: 0 0 auto; color: #718078; font-size: 9px; }
 #prompt { width: 100%; resize: none; border: 0; border-radius: 12px; padding: 11px 12px; background: #fff; color: #18211d; line-height: 1.5; box-shadow: inset 0 0 0 1px #cfd6d2; }
@@ -161,6 +165,8 @@ button { cursor: pointer; }
   .session-delete { color: #e2a39d; }
   .session-delete:hover { background: #482b28; color: #ffc1bb; }
   .message[data-provider="claude"] .agent-avatar { background: #3d3027; color: #e6b796; }
+  .message[data-provider="gemini"] .agent-avatar { background: #27384e; color: #a9c7f2; }
+  .message[data-provider="grok"] .agent-avatar { background: #353535; color: #ededed; }
   .message-error .message-body { border-color: #713f3a; background: #35211f; }
   .official-link, .source-link { color: #8fd4bb; }
 }

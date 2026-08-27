@@ -16,3 +16,8 @@ test("mention selection replaces only the active query and returns cursor", () =
   const result = applyMentionSelection("请问 @cl", { start: 3, end: 6, query: "cl" }, "@claude");
   assert.deepEqual(result, { text: "请问 @claude ", cursor: 11 });
 });
+
+test("mention selection accepts the new subscription agents", () => {
+  assert.equal(applyMentionSelection("@ge", { start: 0, end: 3, query: "ge" }, "@gemini").text, "@gemini ");
+  assert.equal(applyMentionSelection("@gr", { start: 0, end: 3, query: "gr" }, "@grok").text, "@grok ");
+});

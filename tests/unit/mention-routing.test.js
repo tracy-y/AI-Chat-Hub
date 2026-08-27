@@ -10,14 +10,22 @@ test("mention routing targets one explicitly named agent", () => {
 });
 
 test("mention routing supports aliases, multiple agents, and @all", () => {
-  assert.deepEqual(parseMentionRouting("@gpt @claude compare").providers, ["codex", "claude"]);
-  assert.deepEqual(parseMentionRouting("@all compare").providers, ["codex", "claude"]);
+  const available = ["codex", "claude", "gemini", "grok"];
+  assert.deepEqual(parseMentionRouting("@gpt @claude compare", available).providers, ["codex", "claude"]);
+  assert.deepEqual(parseMentionRouting("@all compare", available).providers, available);
 });
 
 test("message without a mention deterministically targets all agents", () => {
-  const route = parseMentionRouting("直接回答");
+  const route = parseMentionRouting("直接回答", ["codex", "claude"]);
   assert.deepEqual(route.providers, ["codex", "claude"]);
   assert.equal(route.explicit, false);
+});
+
+test("mention routing rejects an installed but unavailable agent", () => {
+  assert.throws(
+    () => parseMentionRouting("@gemini 回答", ["codex", "claude"]),
+    /@gemini 当前未安装或未登录/,
+  );
 });
 
 test("mention-only input is rejected", () => {

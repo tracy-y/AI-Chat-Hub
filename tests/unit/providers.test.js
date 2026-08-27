@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { askClaude, askCodex, askSelectedProviders } from "../../apps/local-companion/src/providers.mjs";
+import { askClaude, askCodex, askGemini, askGrok, askSelectedProviders } from "../../apps/local-companion/src/providers.mjs";
 
 test("Codex receives the exact prompt through stdin with fixed safe arguments", async () => {
   const calls = [];
@@ -33,6 +33,49 @@ test("Claude receives the exact prompt with tools and persistence disabled", asy
   assert.deepEqual(calls[0].args.slice(0, 5), ["-p", "--output-format", "json", "--tools", ""]);
   assert.ok(calls[0].args.includes("--no-session-persistence"));
   assert.equal(result.rawText, "原始回答");
+});
+
+test("Gemini uses Antigravity stream input in plan and sandbox modes", async () => {
+  const calls = [];
+  const result = await askGemini("exact Gemini prompt", {
+    command: "/fixed/agy",
+    run: async (call) => {
+      calls.push(call);
+      return {
+        code: 0,
+        signal: null,
+        stdout: `${JSON.stringify({ event: "result", result: { status: "SUCCESS", response: "Gemini 原始回答" } })}\n`,
+        stderr: "",
+      };
+    },
+  });
+
+  assert.deepEqual(JSON.parse(calls[0].input), {
+    event: "user",
+    message: { content: "exact Gemini prompt" },
+  });
+  assert.ok(calls[0].args.includes("stream-json"));
+  assert.ok(calls[0].args.includes("gemini-3.7-flash-medium"));
+  assert.ok(calls[0].args.includes("plan"));
+  assert.ok(calls[0].args.includes("--sandbox"));
+  assert.equal(result.rawText, "Gemini 原始回答");
+});
+
+test("Grok uses a private prompt file with tools disabled and preserves stdout", async () => {
+  const calls = [];
+  const result = await askGrok("exact Grok prompt", {
+    command: "/fixed/grok",
+    run: async (call) => {
+      calls.push(call);
+      return { code: 0, signal: null, stdout: "Grok 原始回答\n", stderr: "" };
+    },
+  });
+
+  assert.equal(calls[0].input, "");
+  assert.ok(calls[0].args.includes("--prompt-file"));
+  assert.ok(calls[0].args.includes("plan"));
+  assert.ok(calls[0].args.includes("--tools"));
+  assert.equal(result.rawText, "Grok 原始回答\n");
 });
 
 test("provider failures do not expose the home path", async () => {

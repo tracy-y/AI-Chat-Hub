@@ -19,10 +19,10 @@ if (!/^[a-p]{32}$/.test(extensionId)) {
   process.exit(2);
 }
 
-function findExecutable(name) {
+function findExecutable(name, required = true) {
   const result = spawnSync("/usr/bin/which", [name], { encoding: "utf8" });
   const path = result.status === 0 ? result.stdout.trim() : "";
-  if (!path) throw new Error(`${name} is not installed or is not on PATH`);
+  if (!path && required) throw new Error(`${name} is not installed or is not on PATH`);
   return path;
 }
 
@@ -38,6 +38,8 @@ await access(hostScript, constants.R_OK);
 const nodeBin = process.execPath;
 const codexBin = findExecutable("codex");
 const claudeBin = findExecutable("claude");
+const antigravityBin = findExecutable("agy", false);
+const grokBin = findExecutable("grok", false);
 const supportDirectory = join(targetRoot, "Library", "Application Support", "AI Chat Hub");
 const launcherPath = join(supportDirectory, "native-host.sh");
 const manifestDirectory = join(targetRoot, "Library", "Application Support", "Google", "Chrome", "NativeMessagingHosts");
@@ -51,6 +53,8 @@ const launcher = [
   "#!/bin/sh",
   `export AI_CHAT_HUB_CODEX_BIN=${shellQuote(codexBin)}`,
   `export AI_CHAT_HUB_CLAUDE_BIN=${shellQuote(claudeBin)}`,
+  ...(antigravityBin ? [`export AI_CHAT_HUB_ANTIGRAVITY_BIN=${shellQuote(antigravityBin)}`] : []),
+  ...(grokBin ? [`export AI_CHAT_HUB_GROK_BIN=${shellQuote(grokBin)}`] : []),
   `exec ${shellQuote(nodeBin)} ${shellQuote(hostScript)}`,
   "",
 ].join("\n");

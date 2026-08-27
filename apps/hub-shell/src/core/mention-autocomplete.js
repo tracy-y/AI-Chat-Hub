@@ -12,7 +12,7 @@ export function findMentionQuery(text, cursor = text.length) {
 }
 
 export function applyMentionSelection(text, mention, token) {
-  if (!mention || !/^@(codex|claude|all)$/.test(token)) {
+  if (!mention || !/^@(codex|claude|gemini|grok|qwen|deepseek|all)$/.test(token)) {
     throw new TypeError("Mention selection is invalid");
   }
 

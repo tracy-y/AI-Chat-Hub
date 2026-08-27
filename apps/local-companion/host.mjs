@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { askSelectedProviders } from "./src/providers.mjs";
+import { askSelectedProviders, listProviderAvailability, PROVIDER_IDS } from "./src/providers.mjs";
 import { createNativeMessageDecoder, encodeNativeMessage } from "./src/native-messaging.mjs";
 import { addUserInstructionsToPrompt, MAX_INSTRUCTION_CHARACTERS, readUserInstructions, writeUserInstructions } from "./src/user-instructions.mjs";
 
@@ -21,6 +21,12 @@ async function handleMessage(message) {
   if (message?.type === "instructions:get") {
     const content = await readUserInstructions();
     send({ id, type: "instructions", content, maxCharacters: MAX_INSTRUCTION_CHARACTERS });
+    return;
+  }
+
+  if (message?.type === "providers:list") {
+    const providers = await listProviderAvailability();
+    send({ id, type: "providers", providers });
     return;
   }
 
@@ -48,8 +54,15 @@ async function handleMessage(message) {
   }
 
   const providers = Array.isArray(message.providers) ? [...new Set(message.providers)] : ["codex", "claude"];
-  if (providers.length === 0 || providers.some((providerId) => !["codex", "claude"].includes(providerId))) {
+  if (providers.length === 0 || providers.some((providerId) => !PROVIDER_IDS.includes(providerId))) {
     send({ id, type: "error", error: "Invalid provider selection" });
+    return;
+  }
+
+  const availability = await listProviderAvailability();
+  const availableIds = new Set(availability.filter((provider) => provider.available).map((provider) => provider.id));
+  if (providers.some((providerId) => !availableIds.has(providerId))) {
+    send({ id, type: "error", error: "Selected Agent is not installed or not logged in" });
     return;
   }
 
