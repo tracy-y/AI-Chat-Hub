@@ -184,6 +184,9 @@ async function loadApiSettings() {
       const keyInput = card.querySelector(".api-key-input");
       keyInput.maxLength = result.maxApiKeyCharacters ?? 512;
       keyInput.value = "";
+      keyInput.placeholder = settings.keyConfigured
+        ? "已保存 Key：••••••••（留空表示保留）"
+        : "输入 API Key（仅保存到 macOS Keychain）";
       card.querySelector(".api-key-state").textContent = settings.keyConfigured
         ? `Keychain 已保存 · ${settings.enabled ? "API 已启用" : "API 已关闭"}`
         : "尚未保存 API Key · 默认关闭";
