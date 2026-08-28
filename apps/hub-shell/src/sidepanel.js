@@ -145,7 +145,7 @@ async function loadProviders() {
   for (const option of pickerOptions) {
     const providerId = option.dataset.providerId;
     if (!providerId) continue;
-    const provider = providers.find((candidate) => candidate.id === providerId);
+    const provider = nativeProviders.find((candidate) => candidate.id === providerId);
     const available = availableProviderIds.includes(providerId);
     option.dataset.available = String(available);
     option.disabled = !available;
