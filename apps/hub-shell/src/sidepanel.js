@@ -145,12 +145,17 @@ async function loadProviders() {
   for (const option of pickerOptions) {
     const providerId = option.dataset.providerId;
     if (!providerId) continue;
+    const provider = providers.find((candidate) => candidate.id === providerId);
     const available = availableProviderIds.includes(providerId);
     option.dataset.available = String(available);
     option.disabled = !available;
     option.hidden = false;
     const providerState = option.querySelector("[data-provider-state]");
-    if (providerState) providerState.textContent = available ? "当前可用" : "官方网页 Bridge · 待接入";
+    if (providerState) {
+      providerState.textContent = available
+        ? "当前可用 · 可选 API"
+        : provider?.installed ? "Key 已保存 · API 已关闭" : "可选 API · 未配置 Key";
+    }
   }
   const allDescription = mentionPicker.querySelector("[data-all-description]");
   if (allDescription) allDescription.textContent = `同时询问 ${availableProviderIds.length} 个可用 Agent`;
@@ -174,7 +179,7 @@ async function loadApiSettings() {
     for (const card of apiSettingCards) {
       const settings = byProvider.get(card.dataset.apiProvider);
       if (!settings) continue;
-      card.querySelector(".api-enabled").checked = settings.enabled;
+      card.querySelector(".api-enabled").checked = settings.enabled && settings.keyConfigured;
       card.querySelector(".api-region").value = settings.region;
       const keyInput = card.querySelector(".api-key-input");
       keyInput.maxLength = result.maxApiKeyCharacters ?? 512;
