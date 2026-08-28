@@ -33,7 +33,9 @@ function shellQuote(value) {
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = dirname(scriptDirectory);
 const hostScript = join(repositoryRoot, "apps", "local-companion", "host.mjs");
+const keychainHelperSource = join(repositoryRoot, "apps", "local-companion", "keychain-helper.c");
 await access(hostScript, constants.R_OK);
+await access(keychainHelperSource, constants.R_OK);
 
 const nodeBin = process.execPath;
 const codexBin = findExecutable("codex");
@@ -41,6 +43,7 @@ const claudeBin = findExecutable("claude");
 const antigravityBin = findExecutable("agy", false);
 const grokBin = findExecutable("grok", false);
 const supportDirectory = join(targetRoot, "Library", "Application Support", "AI Chat Hub");
+const keychainHelperPath = join(supportDirectory, "keychain-helper");
 const launcherPath = join(supportDirectory, "native-host.sh");
 const manifestDirectory = join(targetRoot, "Library", "Application Support", "Google", "Chrome", "NativeMessagingHosts");
 const manifestPath = join(manifestDirectory, `${HOST_NAME}.json`);
@@ -49,12 +52,23 @@ const instructionPath = getInstructionPath(targetRoot);
 await mkdir(supportDirectory, { recursive: true, mode: 0o700 });
 await mkdir(manifestDirectory, { recursive: true });
 
+const clangBin = findExecutable("clang");
+const compileResult = spawnSync(clangBin, [
+  keychainHelperSource,
+  "-framework", "Security",
+  "-framework", "CoreFoundation",
+  "-o", keychainHelperPath,
+], { encoding: "utf8" });
+if (compileResult.status !== 0) throw new Error("Could not compile the macOS Keychain helper");
+await chmod(keychainHelperPath, 0o700);
+
 const launcher = [
   "#!/bin/sh",
   `export AI_CHAT_HUB_CODEX_BIN=${shellQuote(codexBin)}`,
   `export AI_CHAT_HUB_CLAUDE_BIN=${shellQuote(claudeBin)}`,
   ...(antigravityBin ? [`export AI_CHAT_HUB_ANTIGRAVITY_BIN=${shellQuote(antigravityBin)}`] : []),
   ...(grokBin ? [`export AI_CHAT_HUB_GROK_BIN=${shellQuote(grokBin)}`] : []),
+  `export AI_CHAT_HUB_KEYCHAIN_HELPER=${shellQuote(keychainHelperPath)}`,
   `exec ${shellQuote(nodeBin)} ${shellQuote(hostScript)}`,
   "",
 ].join("\n");

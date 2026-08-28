@@ -20,6 +20,9 @@ test("native host installer writes a locked manifest for the fixed extension", a
     assert.deepEqual(manifest.allowed_origins, ["chrome-extension://kciebkgpifidpicfbhpmdddibfnnhkgg/"]);
     assert.equal(manifestMode, 0o600);
 
+    const keychainHelperPath = join(targetRoot, "Library", "Application Support", "AI Chat Hub", "keychain-helper");
+    assert.equal((await stat(keychainHelperPath)).mode & 0o777, 0o700);
+
     const instructionPath = join(targetRoot, "Library", "Application Support", "AI Chat Hub", "instructions", "README.md");
     assert.match(await readFile(instructionPath, "utf8"), /AI Chat Hub User Instructions/);
     assert.equal((await stat(instructionPath)).mode & 0o777, 0o600);

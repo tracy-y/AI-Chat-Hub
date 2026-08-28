@@ -5,7 +5,6 @@ import { runCommand } from "./process-runner.mjs";
 
 export const API_PROVIDER_IDS = Object.freeze(["qwen", "deepseek"]);
 export const MAX_API_KEY_CHARACTERS = 512;
-const KEYCHAIN_SERVICE = "com.tracy.ai-chat-hub.provider-api";
 const REGIONS = new Set(["international", "china"]);
 
 function assertProviderId(providerId) {
@@ -49,10 +48,16 @@ async function readRawSettings(options = {}) {
   }
 }
 
-async function runSecurity(args, input, options = {}) {
+function keychainHelperPath(options = {}) {
+  return options.keychainHelperPath
+    ?? process.env.AI_CHAT_HUB_KEYCHAIN_HELPER
+    ?? join(homedir(), "Library", "Application Support", "AI Chat Hub", "keychain-helper");
+}
+
+async function runKeychainHelper(action, providerId, input, options = {}) {
   return (options.run ?? runCommand)({
-    command: "/usr/bin/security",
-    args,
+    command: keychainHelperPath(options),
+    args: [action, providerId],
     input,
     timeoutMs: 15_000,
     outputLimit: 4_096,
@@ -61,17 +66,13 @@ async function runSecurity(args, input, options = {}) {
 
 export async function hasApiKey(providerId, options = {}) {
   assertProviderId(providerId);
-  const result = await runSecurity([
-    "find-generic-password", "-a", providerId, "-s", KEYCHAIN_SERVICE,
-  ], "", options);
+  const result = await runKeychainHelper("exists", providerId, "", options);
   return result.code === 0;
 }
 
 export async function readApiKey(providerId, options = {}) {
   assertProviderId(providerId);
-  const result = await runSecurity([
-    "find-generic-password", "-a", providerId, "-s", KEYCHAIN_SERVICE, "-w",
-  ], "", options);
+  const result = await runKeychainHelper("get", providerId, "", options);
   if (result.code !== 0) throw new Error(`${providerId} API key is not configured`);
   const key = result.stdout.replace(/[\r\n]+$/, "");
   assertApiKey(key);
@@ -83,10 +84,7 @@ export async function writeApiKey(providerId, apiKey, options = {}) {
   assertProviderId(providerId);
   assertApiKey(apiKey);
   if (!apiKey) throw new TypeError("API key cannot be empty");
-  const result = await runSecurity([
-    "add-generic-password", "-U", "-a", providerId, "-s", KEYCHAIN_SERVICE,
-    "-l", `AI Chat Hub · ${providerId} API`, "-w",
-  ], `${apiKey}\n`, options);
+  const result = await runKeychainHelper("set", providerId, apiKey, options);
   if (result.code !== 0) throw new Error(`Could not save ${providerId} API key to macOS Keychain`);
 }
 

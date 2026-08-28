@@ -12,11 +12,11 @@ function keychainMock() {
     calls,
     run: async (call) => {
       calls.push(call);
-      if (call.args[0] === "add-generic-password") {
-        key = call.input.trimEnd();
+      if (call.args[0] === "set") {
+        key = call.input;
         return { code: 0, stdout: "", stderr: "" };
       }
-      const wantsValue = call.args.includes("-w");
+      const wantsValue = call.args[0] === "get";
       return key
         ? { code: 0, stdout: wantsValue ? `${key}\n` : "item", stderr: "" }
         : { code: 44, stdout: "", stderr: "not found" };
@@ -45,8 +45,8 @@ test("API key goes to Keychain stdin while only non-secret settings reach disk",
       enabled: true, region: "international", apiKey: "sk-private-value",
     }, { root, settingsPath: path, run: mock.run });
     assert.equal(saved.keyConfigured, true);
-    assert.equal(mock.calls[0].command, "/usr/bin/security");
-    assert.equal(mock.calls[0].args.at(-1), "-w");
+    assert.match(mock.calls[0].command, /keychain-helper$/);
+    assert.deepEqual(mock.calls[0].args, ["set", "qwen"]);
     assert.ok(!mock.calls[0].args.includes("sk-private-value"));
     const disk = await readFile(path, "utf8");
     assert.doesNotMatch(disk, /sk-private-value/);
