@@ -26,14 +26,23 @@ int main(int argc, const char *argv[]) {
   const char *account = argv[2];
   if (strcmp(account, "qwen") != 0 && strcmp(account, "deepseek") != 0) fail("unsupported provider", 2);
 
-  if (strcmp(action, "exists") == 0 || strcmp(action, "get") == 0) {
+  if (strcmp(action, "exists") == 0) {
+    SecKeychainItemRef item = NULL;
+    OSStatus status = find_password(account, NULL, NULL, &item);
+    if (item != NULL) CFRelease(item);
+    if (status == errSecItemNotFound) return 44;
+    if (status != errSecSuccess) fail("keychain lookup failed", 3);
+    return 0;
+  }
+
+  if (strcmp(action, "get") == 0) {
     UInt32 length = 0;
     void *data = NULL;
     SecKeychainItemRef item = NULL;
     OSStatus status = find_password(account, &length, &data, &item);
     if (status == errSecItemNotFound || length == 0) return 44;
     if (status != errSecSuccess) fail("keychain read failed", 3);
-    if (strcmp(action, "get") == 0 && fwrite(data, 1, length, stdout) != length) fail("keychain output failed", 3);
+    if (fwrite(data, 1, length, stdout) != length) fail("keychain output failed", 3);
     SecKeychainItemFreeContent(NULL, data);
     if (item != NULL) CFRelease(item);
     return 0;
