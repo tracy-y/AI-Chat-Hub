@@ -72,13 +72,14 @@ export async function getNativeApiProviderSettings(options) {
   };
 }
 
-export async function saveNativeApiProviderSettings(providerId, enabled, region, apiKey, options) {
+export async function saveNativeApiProviderSettings(providerId, enabled, region, apiKey, thinkingEnabled, options) {
   return requestNativeMessage({
     type: "api-settings:set",
     providerId,
     enabled,
     region,
     apiKey,
+    thinkingEnabled,
   }, "apiProviderSettingsSaved", options);
 }
 

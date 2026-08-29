@@ -80,7 +80,8 @@ async function handleMessage(message) {
     if (!API_PROVIDER_IDS.includes(message.providerId)
       || typeof message.enabled !== "boolean"
       || typeof message.region !== "string"
-      || typeof message.apiKey !== "string") {
+      || typeof message.apiKey !== "string"
+      || typeof message.thinkingEnabled !== "boolean") {
       send({ id, type: "error", error: "Invalid API provider settings" });
       return;
     }
@@ -88,6 +89,7 @@ async function handleMessage(message) {
       enabled: message.enabled,
       region: message.region,
       apiKey: message.apiKey,
+      thinkingEnabled: message.thinkingEnabled,
     });
     send({ id, type: "apiProviderSettingsSaved", settings });
     return;
@@ -168,7 +170,11 @@ async function handleMessage(message) {
     return [providerId, {
       model: settings.model,
       prompt: addProviderInstructionsToPrompt(sharedPrompt, settings.instruction, labels.get(providerId) ?? providerId),
-      ...(apiSettings ? { apiKey: await readApiKey(providerId), region: apiSettings.region } : {}),
+      ...(apiSettings ? {
+        apiKey: await readApiKey(providerId),
+        region: apiSettings.region,
+        thinkingEnabled: apiSettings.thinkingEnabled,
+      } : {}),
     }];
   })));
   const results = await askSelectedProviders(sharedPrompt, providers, providerOptions);

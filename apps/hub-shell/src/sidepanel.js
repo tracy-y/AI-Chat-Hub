@@ -180,6 +180,7 @@ async function loadApiSettings() {
       const settings = byProvider.get(card.dataset.apiProvider);
       if (!settings) continue;
       card.querySelector(".api-enabled").checked = settings.enabled && settings.keyConfigured;
+      card.querySelector(".api-thinking-enabled").checked = settings.thinkingEnabled === true;
       card.querySelector(".api-region").value = settings.region;
       card.dataset.savedRegion = settings.region;
       const keyInput = card.querySelector(".api-key-input");
@@ -220,6 +221,7 @@ async function saveApiSetting(card) {
       card.querySelector(".api-enabled").checked,
       selectedRegion,
       keyInput.value.trim(),
+      card.querySelector(".api-thinking-enabled").checked,
     );
     keyInput.value = "";
     status.textContent = "已保存到本机；Key 在 macOS Keychain 中。";

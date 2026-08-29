@@ -116,6 +116,7 @@
           <article class="api-setting-card" data-api-provider="qwen">
             <header><div class="agent-setting-avatar picker-qwen">Q</div><div><strong>Qwen</strong><small class="api-key-state">正在读取…</small></div></header>
             <label class="api-toggle"><input class="api-enabled" type="checkbox" /> 启用可选 API 模式</label>
+            <label class="api-toggle"><input class="api-thinking-enabled" type="checkbox" /> 启用深度思考（回答更慢）</label>
             <label>接入方式
               <select class="api-region"><option value="china">中国区 Coding Plan（订阅）</option><option value="international">国际区 Coding Plan（订阅）</option><option value="china-payg">中国区百炼 API（按量付费）</option></select>
             </label>
@@ -129,6 +130,7 @@
           <article class="api-setting-card" data-api-provider="deepseek">
             <header><div class="agent-setting-avatar picker-deepseek">D</div><div><strong>DeepSeek</strong><small class="api-key-state">正在读取…</small></div></header>
             <label class="api-toggle"><input class="api-enabled" type="checkbox" /> 启用可选 API 模式</label>
+            <input class="api-thinking-enabled" type="hidden" />
             <input class="api-region" type="hidden" value="international" />
             <label>DeepSeek API Key
               <input class="api-key-input" type="password" autocomplete="new-password" placeholder="留空表示保留 Keychain 中现有 Key" />

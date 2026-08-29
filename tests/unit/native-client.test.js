@@ -77,9 +77,10 @@ test("native client reads and saves optional API settings without receiving secr
   const result = await getNativeApiProviderSettings({ chromeApi });
   assert.equal(result.settings[0].keyConfigured, true);
   assert.equal(Object.hasOwn(result.settings[0], "apiKey"), false);
-  await saveNativeApiProviderSettings("qwen", true, "international", "sk-new", { chromeApi });
+  await saveNativeApiProviderSettings("qwen", true, "international", "sk-new", false, { chromeApi });
   assert.equal(posted[1].apiKey, "sk-new");
   assert.equal(posted[1].region, "international");
+  assert.equal(posted[1].thinkingEnabled, false);
 });
 
 function createInstructionChromeApi(onPost) {

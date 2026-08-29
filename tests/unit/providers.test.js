@@ -102,21 +102,25 @@ test("Qwen optional API defaults to the China Coding Plan endpoint and preserves
   });
   assert.equal(call.url, "https://coding.dashscope.aliyuncs.com/v1/chat/completions");
   assert.equal(call.options.headers.Authorization, "Bearer sk-local");
-  assert.deepEqual(JSON.parse(call.options.body).messages, [{ role: "user", content: "Qwen prompt" }]);
+  const body = JSON.parse(call.options.body);
+  assert.deepEqual(body.messages, [{ role: "user", content: "Qwen prompt" }]);
+  assert.equal(body.enable_thinking, false);
   assert.equal(result.rawText, "Qwen 原始 API 回答");
 });
 
 test("Qwen pay-as-you-go mode uses the China Model Studio endpoint", async () => {
-  let url;
+  let call;
   const result = await askQwen("Qwen payg prompt", {
     apiKey: "sk-local",
     region: "china-payg",
-    fetch: async (requestUrl) => {
-      url = requestUrl;
+    thinkingEnabled: true,
+    fetch: async (requestUrl, options) => {
+      call = { url: requestUrl, options };
       return { ok: true, status: 200, text: async () => JSON.stringify({ choices: [{ message: { content: "按量回答" } }] }) };
     },
   });
-  assert.equal(url, "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions");
+  assert.equal(call.url, "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions");
+  assert.equal(JSON.parse(call.options.body).enable_thinking, true);
   assert.equal(result.rawText, "按量回答");
 });
 

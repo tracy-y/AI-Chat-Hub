@@ -29,7 +29,7 @@ test("optional API providers default to disabled and do not expose a key", async
   const mock = keychainMock();
   try {
     assert.deepEqual(await readApiProviderSettings("qwen", { root, run: mock.run }), {
-      providerId: "qwen", enabled: false, region: "china", keyConfigured: false,
+      providerId: "qwen", enabled: false, region: "china", thinkingEnabled: false, keyConfigured: false,
     });
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -75,9 +75,10 @@ test("Qwen pay-as-you-go access mode is stored without exposing its key", async 
   const mock = keychainMock();
   try {
     const saved = await writeApiProviderSettings("qwen", {
-      enabled: true, region: "china-payg", apiKey: "sk-private-payg",
+      enabled: true, region: "china-payg", apiKey: "sk-private-payg", thinkingEnabled: true,
     }, { root, settingsPath: path, run: mock.run });
     assert.equal(saved.region, "china-payg");
+    assert.equal(saved.thinkingEnabled, true);
     assert.doesNotMatch(await readFile(path, "utf8"), /sk-private-payg/);
   } finally {
     await rm(root, { recursive: true, force: true });

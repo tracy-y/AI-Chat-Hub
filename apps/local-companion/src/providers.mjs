@@ -60,6 +60,7 @@ async function askOpenAiCompatible(prompt, {
   apiKey,
   baseUrl,
   model,
+  requestOptions = {},
   fetchImpl = fetch,
 }) {
   try {
@@ -74,6 +75,7 @@ async function askOpenAiCompatible(prompt, {
         model,
         messages: [{ role: "user", content: prompt }],
         stream: false,
+        ...requestOptions,
       }),
       signal: AbortSignal.timeout(180_000),
     });
@@ -220,6 +222,7 @@ export async function askQwen(prompt, options = {}) {
     apiKey: options.apiKey,
     baseUrl,
     model: options.model || "qwen3.5-plus",
+    requestOptions: { enable_thinking: options.thinkingEnabled === true },
     fetchImpl: options.fetch,
   });
 }

@@ -93,18 +93,25 @@ export async function readApiProviderSettings(providerId, options = {}) {
   const all = await readRawSettings(options);
   const saved = all[providerId] ?? {};
   const enabled = saved.enabled === true;
+  const thinkingEnabled = providerId === "qwen" && saved.thinkingEnabled === true;
   const region = providerId === "qwen" && QWEN_ACCESS_MODES.has(saved.region) ? saved.region : "china";
   const keyConfigured = await hasApiKey(providerId, options);
-  return Object.freeze({ providerId, enabled, region, keyConfigured });
+  return Object.freeze({ providerId, enabled, region, thinkingEnabled, keyConfigured });
 }
 
 export async function readAllApiProviderSettings(options = {}) {
   return Promise.all(API_PROVIDER_IDS.map((providerId) => readApiProviderSettings(providerId, options)));
 }
 
-export async function writeApiProviderSettings(providerId, { enabled, region = "china", apiKey = "" }, options = {}) {
+export async function writeApiProviderSettings(providerId, {
+  enabled,
+  region = "china",
+  apiKey = "",
+  thinkingEnabled = false,
+}, options = {}) {
   assertProviderId(providerId);
   if (typeof enabled !== "boolean") throw new TypeError("API enabled state must be boolean");
+  if (typeof thinkingEnabled !== "boolean") throw new TypeError("Invalid thinking mode");
   if (providerId === "qwen" && !QWEN_ACCESS_MODES.has(region)) throw new TypeError("Invalid Qwen access mode");
   assertApiKey(apiKey);
   if (apiKey) await writeApiKey(providerId, apiKey, options);
@@ -112,7 +119,16 @@ export async function writeApiProviderSettings(providerId, { enabled, region = "
   if (enabled && !keyConfigured) throw new Error("Save an API key before enabling this provider");
 
   const all = await readRawSettings(options);
-  all[providerId] = { enabled, ...(providerId === "qwen" ? { region } : {}) };
+  all[providerId] = {
+    enabled,
+    ...(providerId === "qwen" ? { region, thinkingEnabled } : {}),
+  };
   await atomicPrivateWrite(options.settingsPath ?? settingsPath(options.root), `${JSON.stringify(all, null, 2)}\n`);
-  return Object.freeze({ providerId, enabled, region: providerId === "qwen" ? region : "international", keyConfigured });
+  return Object.freeze({
+    providerId,
+    enabled,
+    region: providerId === "qwen" ? region : "international",
+    thinkingEnabled: providerId === "qwen" && thinkingEnabled,
+    keyConfigured,
+  });
 }
