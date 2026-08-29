@@ -68,3 +68,18 @@ test("provider cannot be enabled before a key exists", async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("Qwen pay-as-you-go access mode is stored without exposing its key", async () => {
+  const root = await mkdtemp(join(tmpdir(), "ai-chat-hub-qwen-payg-"));
+  const path = join(root, "api-settings.json");
+  const mock = keychainMock();
+  try {
+    const saved = await writeApiProviderSettings("qwen", {
+      enabled: true, region: "china-payg", apiKey: "sk-private-payg",
+    }, { root, settingsPath: path, run: mock.run });
+    assert.equal(saved.region, "china-payg");
+    assert.doesNotMatch(await readFile(path, "utf8"), /sk-private-payg/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

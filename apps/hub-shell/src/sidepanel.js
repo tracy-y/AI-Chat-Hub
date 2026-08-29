@@ -181,6 +181,7 @@ async function loadApiSettings() {
       if (!settings) continue;
       card.querySelector(".api-enabled").checked = settings.enabled && settings.keyConfigured;
       card.querySelector(".api-region").value = settings.region;
+      card.dataset.savedRegion = settings.region;
       const keyInput = card.querySelector(".api-key-input");
       keyInput.maxLength = result.maxApiKeyCharacters ?? 512;
       keyInput.value = "";
@@ -207,10 +208,17 @@ async function saveApiSetting(card) {
   status.dataset.status = "";
   status.textContent = "正在安全保存…";
   try {
+    const selectedRegion = card.querySelector(".api-region").value;
+    if (providerId === "qwen"
+      && card.dataset.savedRegion
+      && selectedRegion !== card.dataset.savedRegion
+      && !keyInput.value.trim()) {
+      throw new Error("切换 Qwen 接入方式时，请输入该方式对应的 API Key。");
+    }
     await saveNativeApiProviderSettings(
       providerId,
       card.querySelector(".api-enabled").checked,
-      card.querySelector(".api-region").value,
+      selectedRegion,
       keyInput.value.trim(),
     );
     keyInput.value = "";

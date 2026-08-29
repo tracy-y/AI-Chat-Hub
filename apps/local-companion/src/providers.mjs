@@ -208,10 +208,12 @@ export async function askGrok(prompt, options = {}) {
 }
 
 export async function askQwen(prompt, options = {}) {
-  const region = options.region === "international" ? "international" : "china";
-  const baseUrl = region === "china"
-    ? "https://coding.dashscope.aliyuncs.com/v1"
-    : "https://coding-intl.dashscope.aliyuncs.com/v1";
+  const baseUrls = {
+    china: "https://coding.dashscope.aliyuncs.com/v1",
+    international: "https://coding-intl.dashscope.aliyuncs.com/v1",
+    "china-payg": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+  };
+  const baseUrl = baseUrls[options.region] ?? baseUrls.china;
   return askOpenAiCompatible(prompt, {
     providerId: "qwen",
     providerLabel: "Qwen（可选 API）",

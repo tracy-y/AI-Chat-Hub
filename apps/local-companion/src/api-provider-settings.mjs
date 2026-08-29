@@ -5,7 +5,7 @@ import { runCommand } from "./process-runner.mjs";
 
 export const API_PROVIDER_IDS = Object.freeze(["qwen", "deepseek"]);
 export const MAX_API_KEY_CHARACTERS = 512;
-const REGIONS = new Set(["international", "china"]);
+const QWEN_ACCESS_MODES = new Set(["international", "china", "china-payg"]);
 
 function assertProviderId(providerId) {
   if (!API_PROVIDER_IDS.includes(providerId)) throw new TypeError("Unsupported API provider");
@@ -93,7 +93,7 @@ export async function readApiProviderSettings(providerId, options = {}) {
   const all = await readRawSettings(options);
   const saved = all[providerId] ?? {};
   const enabled = saved.enabled === true;
-  const region = providerId === "qwen" && REGIONS.has(saved.region) ? saved.region : "china";
+  const region = providerId === "qwen" && QWEN_ACCESS_MODES.has(saved.region) ? saved.region : "china";
   const keyConfigured = await hasApiKey(providerId, options);
   return Object.freeze({ providerId, enabled, region, keyConfigured });
 }
@@ -105,7 +105,7 @@ export async function readAllApiProviderSettings(options = {}) {
 export async function writeApiProviderSettings(providerId, { enabled, region = "china", apiKey = "" }, options = {}) {
   assertProviderId(providerId);
   if (typeof enabled !== "boolean") throw new TypeError("API enabled state must be boolean");
-  if (providerId === "qwen" && !REGIONS.has(region)) throw new TypeError("Invalid Qwen API region");
+  if (providerId === "qwen" && !QWEN_ACCESS_MODES.has(region)) throw new TypeError("Invalid Qwen access mode");
   assertApiKey(apiKey);
   if (apiKey) await writeApiKey(providerId, apiKey, options);
   const keyConfigured = apiKey ? true : await hasApiKey(providerId, options);

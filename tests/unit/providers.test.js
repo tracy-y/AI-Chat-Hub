@@ -106,6 +106,20 @@ test("Qwen optional API defaults to the China Coding Plan endpoint and preserves
   assert.equal(result.rawText, "Qwen 原始 API 回答");
 });
 
+test("Qwen pay-as-you-go mode uses the China Model Studio endpoint", async () => {
+  let url;
+  const result = await askQwen("Qwen payg prompt", {
+    apiKey: "sk-local",
+    region: "china-payg",
+    fetch: async (requestUrl) => {
+      url = requestUrl;
+      return { ok: true, status: 200, text: async () => JSON.stringify({ choices: [{ message: { content: "按量回答" } }] }) };
+    },
+  });
+  assert.equal(url, "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions");
+  assert.equal(result.rawText, "按量回答");
+});
+
 test("DeepSeek optional API uses the official endpoint and does not expose response bodies on errors", async () => {
   const result = await askDeepSeek("DeepSeek prompt", {
     apiKey: "sk-local",

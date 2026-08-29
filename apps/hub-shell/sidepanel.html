@@ -116,10 +116,11 @@
           <article class="api-setting-card" data-api-provider="qwen">
             <header><div class="agent-setting-avatar picker-qwen">Q</div><div><strong>Qwen</strong><small class="api-key-state">正在读取…</small></div></header>
             <label class="api-toggle"><input class="api-enabled" type="checkbox" /> 启用可选 API 模式</label>
-            <label>区域
-              <select class="api-region"><option value="china">中国区 Coding Plan（当前）</option><option value="international">国际区 Coding Plan</option></select>
+            <label>接入方式
+              <select class="api-region"><option value="china">中国区 Coding Plan（订阅）</option><option value="international">国际区 Coding Plan（订阅）</option><option value="china-payg">中国区百炼 API（按量付费）</option></select>
             </label>
-            <label>Alibaba Cloud Coding Plan API Key
+            <p class="instruction-help">Coding Plan 与百炼按量付费使用不同的 Key 和接口。切换接入方式时必须输入对应的新 Key。</p>
+            <label>Alibaba Cloud API Key
               <input class="api-key-input" type="password" autocomplete="new-password" placeholder="留空表示保留 Keychain 中现有 Key" />
             </label>
             <button class="save-api-setting" type="button">保存 Qwen API 设置</button>
