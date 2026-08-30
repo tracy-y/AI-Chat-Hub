@@ -1,6 +1,6 @@
 import { createImmutableResponse } from "../core/response-record.js";
 
-export function createNativeAgentResponse({ providerId, providerLabel, promptText, rawText }) {
+export function createNativeAgentResponse({ providerId, providerLabel, promptText, rawText, modelId = null }) {
   if (!providerId || !providerLabel || !promptText?.trim()) {
     throw new TypeError("Native agent response identity is incomplete");
   }
@@ -12,6 +12,7 @@ export function createNativeAgentResponse({ providerId, providerLabel, promptTex
     id: crypto.randomUUID(),
     providerId,
     providerLabel,
+    modelId,
     promptText,
     rawText,
     capturedAt: new Date().toISOString(),

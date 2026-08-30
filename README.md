@@ -21,6 +21,7 @@ AI Chat Hub 是一个 Mac 本地 Chrome 侧边栏 PoC。所有消息出现在同
 - Qwen 和 DeepSeek 的“可选 API 模式”默认关闭。启用状态与区域保存在本机私有设置文件，API Key 通过无命令行明文参数的方式写入 macOS Keychain；Native Companion 只向扩展返回“是否已配置”，绝不返回 Key 内容。
 - Qwen 默认使用中国区 Coding Plan；也可切换到国际区 Coding Plan，或使用中国区百炼按量付费 API。不同计费方式的 Key 与 Base URL 不可混用，切换时必须输入对应 Key。
 - Qwen 深度思考默认关闭，以降低普通聊天等待时间；用户可在 API 设置中按需开启，回复文本仍按供应商原文保存。
+- API 回答在标题中显示供应商响应实际返回的模型 ID；正文仍逐字保存，不增加身份约束或事后改写。
 
 ## 本机运行
 

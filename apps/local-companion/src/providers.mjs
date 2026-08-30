@@ -83,7 +83,10 @@ async function askOpenAiCompatible(prompt, {
     const payload = JSON.parse(await response.text());
     const rawText = payload?.choices?.[0]?.message?.content;
     if (typeof rawText !== "string" || !rawText.trim()) throw new Error(`${providerLabel} API returned an empty answer`);
-    return { providerId, providerLabel, status: "completed", rawText };
+    const modelId = typeof payload?.model === "string" && payload.model.trim().length <= 120
+      ? payload.model.trim()
+      : null;
+    return { providerId, providerLabel, status: "completed", rawText, modelId };
   } catch (error) {
     return safeFailure(providerId, providerLabel, error);
   }

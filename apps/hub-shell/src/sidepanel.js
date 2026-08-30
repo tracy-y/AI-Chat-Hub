@@ -424,7 +424,9 @@ function createAgentElement(record) {
   const element = fragment.querySelector(".message");
   element.dataset.provider = record.providerId;
   element.querySelector(".agent-avatar").textContent = PROVIDER_AVATARS[record.providerId] ?? "@";
-  element.querySelector(".provider-name").textContent = record.providerLabel;
+  element.querySelector(".provider-name").textContent = record.modelId
+    ? `${record.providerLabel} · ${record.modelId}`
+    : record.providerLabel;
   element.querySelector("time").textContent = formatTime(record.capturedAt ?? record.createdAt);
   element.querySelector(".message-text").textContent = record.rawText ?? record.error;
   if (record.kind === "error") element.classList.add("message-error");

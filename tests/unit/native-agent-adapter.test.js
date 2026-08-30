@@ -8,10 +8,12 @@ test("native agent adapter preserves prompt and answer exactly", () => {
     providerLabel: "Codex",
     promptText: "  question\n",
     rawText: "  answer\n\n",
+    modelId: "qwen3.5-plus",
   });
 
   assert.equal(record.promptText, "  question\n");
   assert.equal(record.rawText, "  answer\n\n");
+  assert.equal(record.modelId, "qwen3.5-plus");
   assert.equal(record.captureVersion, "native-agent-v1");
   assert.equal(Object.isFrozen(record), true);
 });
